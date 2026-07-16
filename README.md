@@ -68,6 +68,20 @@ used to evaluate anything, so `run_validate.py --fresh` tests v2 on it alone:
 `results/gate_fresh.json`, `test_status: "CLEAN"`. **That is the v2 number to
 quote.**
 
+### And it replicates on unseen data
+
+The clean 2025-26 test (1,959 players, one horizon):
+
+| | calibration | skill | concentration | verdict |
+|---|---|---|---|---|
+| goals +1 | 92.2% ✗ | MAE **1.248** vs persistence 1.633 — diff −0.386 [−0.459, −0.315] ✓ | 0/9 ✓ | NOT PROVEN |
+| assists +1 | 92.2% ✗ | MAE **1.040** vs cohort mean 1.376 — diff −0.336 [−0.384, −0.287] ✓ | 0/9 ✓ | NOT PROVEN |
+
+Different base season, different test season, near-identical numbers to v1's
+2022 split (cal 91.5%, MAE 1.279 vs 1.642, diff −0.363). **"Useful point
+projections, untrustworthy intervals" is not an artefact of one split** — it
+survived a clean replication, which is the strongest claim this project makes.
+
 ## Quick start
 
 ```bash

@@ -40,6 +40,12 @@ type results\projections.json                # the 10 young players, incl. Yamal
 type results\calibration_diagnostic.json     # why calibration failed, broken out
 ```
 
+**Read `gate_fresh.json` before `gate.json`.** Every gate file carries a
+`test_status` field. `gate.json` says `SECOND LOOK` — v2 was built after seeing
+the v1 result, so that split is spent. `gate_fresh.json` says `CLEAN`: season
+2025-26 was never used to evaluate anything, and the finding replicates there on
+its own. That is the number with standing.
+
 Prefer pictures:
 
 ```

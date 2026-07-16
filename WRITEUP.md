@@ -133,24 +133,36 @@ every goalkeeper in Europe.
 ## 4. So what about Yamal?
 
 Labelled **NOT TRUSTWORTHY**, as §2 requires. With that said, here is what the
-model produces (Big-5 domestic league only, from age 18 to a notional 38):
+model produces (Big-5 domestic league only, from age 18 to a notional 38). Both
+model versions are shown, because the difference between them *is* the lesson:
 
-| | median | 10-90% |
+| | v1 | **v2 (talent-conditioned)** |
 |---|---|---|
-| future non-penalty goals | **31** | 7 - 72 |
-| future assists | **34** | 7 - 80 |
-| next season non-penalty goals | 5 | 1 - 11 |
-| **career total league goals** (incl. penalties, 30 already scored) | **69** | 38 - 120 |
+| future non-penalty goals | 31 [7 - 72] | **45** [15 - 87] |
+| future assists | 34 [7 - 80] | **51** [17 - 96] |
+| **career total league goals** (incl. penalties, 30 already scored) | 69 [38 - 120] | **88** [50 - 142] |
+| P(career ≥ 100) | 22% | **38%** |
+| P(career ≥ 150) | 2.7% | **7.2%** |
+| P(career ≥ 200) | 0.2% | 0.4% |
+| **P(beating Messi's 474 La Liga)** | 0.0000 | **0.0000** |
 
-P(career ≥ 100 league goals) = **22%**. P(≥ 150) = 2.7%. P(≥ 200) = 0.2%.
-**P(beating Messi's 474 La Liga goals) = 0.0000.**
+Fixing one modelling flaw moved his median career total by **28%** (69 → 88) and
+nearly doubled P(≥100). That is worth sitting with: the headline number was never
+really a fact about Yamal, it was a fact about an assumption buried in the
+availability model. It is why the paragraph below matters more than the table
+above, and why the label is on both columns.
 
-The interval spans a factor of ten. That is the under-confidence of §2 made
-visible, and it is why the label is on it.
+The interval still spans a factor of roughly six. That is the under-confidence of
+§2, and it is why the label stays.
 
-**Why the model is this pessimistic — and where it is probably wrong.** The
+**What did not move: the record.** P(Messi's 474) is 0.0000 in both versions —
+not close, and not sensitive to the fix. His v2 90th percentile is 142 career
+Big-5 league goals; the record is 474. Even the most optimistic correction to
+availability leaves the two an order of magnitude apart.
+
+**Why v1 was this pessimistic — this is the diagnosis the fix came from.** The
 median is driven almost entirely by *availability*, not by talent. Simulating the
-minutes chain alone from Yamal's actual state (2,262 minutes at 18) gives a
+v1 minutes chain alone from Yamal's actual state (2,262 minutes at 18) gives a
 median of **9,794 career Big-5 minutes** (~109 × 90s) and:
 
 | still in the Big-5 at age | 20 | 23 | 26 | 30 | 34 |
@@ -168,19 +180,25 @@ it isn't: the (2000-2500 minutes, under-20) cell has 48 observations of its own,
 and its observed P(zero next season) is **0.0**. The drop-off is real and
 happens later in the chain.)
 
-The flaw is narrower and more interesting: **the availability model conditions on
-minutes and age, and never on talent.** A generational 18-year-old is handed the
-dropout hazard of the *average* 18-year-old with similar minutes. Elite players
-keep their place far longer than average ones, and the model has no way to know
-Yamal is elite beyond his rate — which it then shrinks by K = 110. That
-plausibly drags the median down and, because pooling across talent levels
-inflates the minutes variance, widens the interval too. Conditioning availability
-on talent is the highest-value fix on the list, ahead of xG.
+The flaw was narrower and more interesting: **v1's availability model conditioned
+on minutes and age, and never on talent.** A generational 18-year-old was handed
+the dropout hazard of the *average* 18-year-old with similar minutes. Elite
+players keep their place far longer than average ones, and v1 had no way to know
+Yamal is elite beyond his rate — which it then shrinks by K = 110.
 
-The honest one-line answer to the original question: **the model says Yamal has
-essentially no chance of Messi's record — and the model is exactly the kind of
-model that would understate a generational talent.** Both halves of that sentence
-matter.
+**§4b fixes exactly this**, and the diagnosis held: conditioning on talent raises
+his P(still in the Big-5 at 30) from 0.25 to 0.43 and his median career total
+from 69 to 88. The prediction that it would also *narrow* the interval was only
+half right — the 10th percentile rose sharply (7 → 15 future goals), but the
+spread stayed wide, because §3 had already shown the width is mostly the
+discreteness of the target rather than the minutes model.
+
+The honest answer to the original question: **the model says Yamal has
+essentially no chance of Messi's record, and that conclusion survived fixing the
+one flaw most likely to have caused it.** P(474) is 0.0000 in both versions; his
+v2 90th percentile is 142 against a record of 474. The gap is not a modelling
+artefact — it is what happens when you count only Big-5 domestic-league goals and
+ask a teenager to sustain Messi's career for fifteen years.
 
 ## 4b. v2 — conditioning availability on talent
 
@@ -229,10 +247,29 @@ distribution. **Every horizon is still NOT PROVEN.**
 gate, so re-running the same 2022-24 split is a **second look at a spent test
 set**. The table above is reported for information and is labelled
 `test_status: "SECOND LOOK"` in `results/gate.json`. It is not a pre-registered
-result and must not be quoted as one. Season 2025-26 was never used to evaluate
-anything, so `run_validate.py --fresh` trains through 2024 and tests v2 on 2025
-alone — one clean horizon, in `results/gate_fresh.json` with
-`test_status: "CLEAN"`. See DESIGN.md §A5.
+result and must not be quoted as one. See DESIGN.md §A5.
+
+### The clean test: 2025-26
+
+Season 2025-26 was never used to evaluate anything — the inner split scored
+2020-21, the gate scored 2022-24. `run_validate.py --fresh` trains through 2024
+and tests v2 on 2025 alone: one horizon, but genuinely untouched data
+(`results/gate_fresh.json`, `test_status: "CLEAN"`, 1,959 players).
+
+| | calibration (need 72-88%) | skill | concentration | verdict |
+|---|---|---|---|---|
+| goals +1 | **92.2%** ✗ | MAE **1.248** vs persistence 1.633 — diff −0.386 [−0.459, −0.315] ✓ | 0/9 ✓ | **NOT PROVEN** |
+| assists +1 | **92.2%** ✗ | MAE **1.040** vs cohort mean 1.376 — diff −0.336 [−0.384, −0.287] ✓ | 0/9 ✓ | **NOT PROVEN** |
+
+**The v1 finding replicates on unseen data.** Different base season, different
+test season, same signature: skill real and broad, intervals too wide, NOT
+PROVEN. Compare the fresh goals +1 (cal 92.2%, MAE 1.248 vs 1.633, diff −0.386)
+against v1's 2022 goals +1 (cal 91.5%, MAE 1.279 vs 1.642, diff −0.363) — the
+numbers are near-identical across a completely separate split.
+
+That matters more than any single gate. **"Useful point projections,
+untrustworthy intervals" is not an artefact of one split** — it survived a clean
+replication, which is the strongest claim this project makes.
 
 ## 5. Data
 
