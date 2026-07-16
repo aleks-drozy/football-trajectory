@@ -29,12 +29,16 @@ SOT = "sot"  # shots on target
 NPG90 = "npg90"
 AST90 = "ast90"
 SH90 = "sh90"
+# Total goals incl. penalties. The model's honest unit is non-penalty goals
+# (penalty duty is a team role, not a scoring skill), but every published goal
+# *record* counts penalties, so record comparison needs this too.
+GLS90 = "gls90"
 
 PANEL_COLUMNS = [
     PLAYER, BORN, SEASON, AGE, LEAGUE, TEAM, POS,
     MINUTES, N90, MATCHES, STARTS,
     GOALS, PK, NPG, ASSISTS, SHOTS, SOT,
-    NPG90, AST90, SH90,
+    NPG90, AST90, SH90, GLS90,
 ]
 
 POSITION_GROUPS = ["GK", "DF", "MF", "FW"]

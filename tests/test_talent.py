@@ -125,6 +125,52 @@ def test_fit_K_selects_from_the_grid_and_scores_every_point(cohort_panel):
     assert all(np.isfinite(v) for v in scores.values())
 
 
+def test_vectorised_fit_path_matches_the_per_row_estimator(cohort_panel):
+    """fit_K precomputes K-independent sums and evaluates the grid in closed
+    form. That must agree exactly with calling TalentModel.estimate row by row,
+    or the optimisation has quietly changed the model.
+    """
+    from model.aging import fit_aging_curve
+    from model.talent import (
+        DEFAULT_RECENCY_WEIGHTS,
+        _prediction_frame,
+        _sufficient_stats,
+    )
+
+    train_seasons = [2017, 2018, 2019, 2020]
+    train = cohort_panel[cohort_panel[S.SEASON].isin(train_seasons)]
+    curve = fit_aging_curve(train, S.NPG90, variant="survivors")
+    priors = fit_priors(train, S.NPG90)
+    played = train[train[S.N90] > 0]
+    global_prior = float(
+        np.average(played[S.NPG90].to_numpy(), weights=played[S.N90].to_numpy())
+    )
+
+    targets = _prediction_frame(train, S.NPG90, 5.0)
+    w_events, w_n90, prior_arr, delta_arr = _sufficient_stats(
+        train, targets, S.NPG, S.NPG90, curve, DEFAULT_RECENCY_WEIGHTS, priors, global_prior
+    )
+
+    K = 17.0
+    fast = (w_events + K * prior_arr) / (w_n90 + K) + delta_arr
+
+    model = TalentModel(
+        metric=S.NPG90, events_col=S.NPG, K=K, priors=priors, global_prior=global_prior
+    )
+    slow = np.empty(len(targets))
+    for i, row in enumerate(targets.itertuples(index=False)):
+        grp = train[
+            (train[S.PLAYER] == getattr(row, S.PLAYER))
+            & (train[S.BORN] == getattr(row, S.BORN))
+        ]
+        hist = grp[grp[S.SEASON] <= row.from_season]
+        pos, age = getattr(row, S.POS), int(getattr(row, S.AGE))
+        slow[i] = model.estimate(hist, pos, age) + curve.delta(pos, age, int(row.age_next))
+
+    assert len(fast) > 50, "fixture should produce a meaningful number of targets"
+    np.testing.assert_allclose(fast, slow, rtol=1e-9, atol=1e-12)
+
+
 def test_priors_are_minutes_weighted(cohort_panel):
     priors = fit_priors(cohort_panel, S.NPG90)
     assert priors, "expected at least one (pos, bucket) prior"

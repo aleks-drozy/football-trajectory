@@ -22,6 +22,51 @@ from . import schema as S
 
 RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
 
+BIG5_LEAGUES = frozenset(
+    {
+        "ENG-Premier League",
+        "ESP-La Liga",
+        "FRA-Ligue 1",
+        "ITA-Serie A",
+        "GER-Bundesliga",
+    }
+)
+
+
+def repair_missing_league(raw: pd.DataFrame) -> pd.DataFrame:
+    """Fill in the league label soccerdata drops for one of the Big 5.
+
+    soccerdata's "Big 5 European Leagues Combined" view returns a null `league`
+    for every Bundesliga row (~18% of the panel) while labelling the other four
+    correctly. The rows themselves are fine — Bayern, Dortmund and Leverkusen
+    are all present — only the label is missing.
+
+    The repair is inferred, so it verifies its own premise instead of trusting
+    it: the fetch requests exactly five leagues, so if precisely one label is
+    absent the unlabelled rows can only belong to it. If that ever stops
+    holding — two labels missing, or an unexpected league appearing — this
+    raises rather than silently mislabelling a fifth of the data.
+    """
+    if not raw["league"].isna().any():
+        return raw
+
+    present = set(raw["league"].dropna().unique())
+    unexpected = present - BIG5_LEAGUES
+    if unexpected:
+        raise ValueError(f"unexpected leagues in a Big-5 fetch: {sorted(unexpected)}")
+
+    missing = sorted(BIG5_LEAGUES - present)
+    if len(missing) != 1:
+        raise ValueError(
+            "cannot infer the missing league label: expected exactly one of the "
+            f"Big 5 to be absent, found {len(missing)} ({missing}). "
+            "Null league rows can no longer be attributed unambiguously."
+        )
+
+    raw = raw.copy()
+    raw["league"] = raw["league"].fillna(missing[0])
+    return raw
+
 
 def _season_start_year(season_code: str | int) -> int:
     """FBref/soccerdata season codes look like '1718' -> 2017, '2526' -> 2025."""
@@ -79,6 +124,7 @@ def build_panel(seasons: list[str] | None = None) -> pd.DataFrame:
 
     frames = [load_raw_season(s) for s in seasons]
     raw = pd.concat(frames, ignore_index=True)
+    raw = repair_missing_league(raw)
 
     raw = raw[raw["born"].notna()].copy()
     raw["_season_start"] = raw["season"].map(_season_start_year)
@@ -125,7 +171,12 @@ def build_panel(seasons: list[str] | None = None) -> pd.DataFrame:
     panel[S.N90] = panel[S.MINUTES] / 90.0
     panel[S.NPG] = panel[S.GOALS] - panel[S.PK]
 
-    for rate, events in ((S.NPG90, S.NPG), (S.AST90, S.ASSISTS), (S.SH90, S.SHOTS)):
+    for rate, events in (
+        (S.NPG90, S.NPG),
+        (S.AST90, S.ASSISTS),
+        (S.SH90, S.SHOTS),
+        (S.GLS90, S.GOALS),
+    ):
         panel[rate] = (panel[events] / panel[S.N90]).where(panel[S.N90] > 0, 0.0)
 
     panel = panel[S.PANEL_COLUMNS].sort_values([S.PLAYER, S.BORN, S.SEASON])

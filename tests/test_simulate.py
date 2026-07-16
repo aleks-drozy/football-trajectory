@@ -147,6 +147,42 @@ def test_bootstrap_curves_resamples_players_not_rows():
     assert len(set(np.round(deltas, 6))) > 1, "bootstrap curves must actually differ"
 
 
+def test_bootstrap_replicas_do_not_cross_join():
+    """A player drawn k times must contribute k season-pairs, not k^2.
+
+    build_pairs links consecutive seasons by self-merging on (player, born,
+    season). If bootstrap replicas keep the same identity, a player drawn twice
+    cross-joins with his own copy and produces 4 pairs where 2 are correct —
+    quadratically over-weighting whoever the resample happened to duplicate,
+    and exploding the row count.
+    """
+    from model.aging import build_pairs
+
+    panel = pd.DataFrame(
+        [
+            make_player_season("Solo", 1995, 2017, 1800, npg=9),
+            make_player_season("Solo", 1995, 2018, 1800, npg=9),
+        ]
+    )
+    # One player in the panel, so every bootstrap resample duplicates him.
+    curves = bootstrap_curves(panel, S.NPG90, "survivors", n_boot=1, seed=0)
+    assert curves, "bootstrap should still produce a curve"
+
+    rng = np.random.default_rng(0)
+    keys = panel[[S.PLAYER, S.BORN]].drop_duplicates().to_numpy()
+    idx = rng.integers(0, len(keys), size=len(keys))
+    picked = pd.DataFrame(keys[idx], columns=[S.PLAYER, S.BORN])
+    picked["_replica"] = np.arange(len(picked))
+    boot = picked.merge(panel, on=[S.PLAYER, S.BORN], how="left")
+    boot[S.PLAYER] = boot[S.PLAYER] + "#r" + boot["_replica"].astype(str)
+    boot = boot.drop(columns=["_replica"])
+
+    n_replicas = len(picked)
+    assert len(boot) == n_replicas * 2, "each replica keeps exactly its own 2 seasons"
+    pairs = build_pairs(boot, S.NPG90, variant="survivors")
+    assert len(pairs) == n_replicas, "one pair per replica, not one per replica squared"
+
+
 def test_requires_at_least_one_curve(parts):
     _, acurve, mm = parts
     with pytest.raises(ValueError):

@@ -182,7 +182,15 @@ def bootstrap_curves(
         idx = rng.integers(0, len(keys), size=len(keys))
         picked = pd.DataFrame(keys[idx], columns=[S.PLAYER, S.BORN])
         # merge (not isin) so a player drawn twice contributes twice
+        picked["_replica"] = np.arange(len(picked))
         boot = picked.merge(panel, on=[S.PLAYER, S.BORN], how="left")
+        # Each replica must become its own identity. Downstream, build_pairs
+        # self-merges the panel on (player, born, season) to link consecutive
+        # seasons — so a player drawn k times would cross-join against his own
+        # copies and yield k^2 pairs instead of k, weighting duplicated players
+        # quadratically and inflating the data by orders of magnitude.
+        boot[S.PLAYER] = boot[S.PLAYER] + "#r" + boot["_replica"].astype(str)
+        boot = boot.drop(columns=["_replica"])
         try:
             curves.append(
                 fit_aging_curve(

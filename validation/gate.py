@@ -15,6 +15,7 @@ from dataclasses import dataclass, asdict
 from typing import Any
 
 import numpy as np
+import pandas as pd
 
 NOMINAL = 0.80
 COVERAGE_LO = 0.72
@@ -154,6 +155,14 @@ def concentration_check(
     results: dict[str, dict[str, Any]] = {}
     all_pass = True
     for label, values in groups.items():
+        # Nulls would make this a silent hole in the check — the affected rows
+        # could never be left out, so an edge concentrated in them would pass
+        # unnoticed. (np.unique also raises on mixed str/float.) Fail loudly.
+        if pd.isna(pd.Series(values)).any():
+            raise ValueError(
+                f"group '{label}' contains nulls; leave-one-group-out cannot "
+                "check a level it cannot name"
+            )
         for level in np.unique(values):
             mask = values != level
             if mask.sum() < 50:

@@ -143,6 +143,64 @@ mode of this genre of project is publishing exactly that. Reporting an honest nu
 better result than an unfalsifiable fan chart, and is the intended outcome if that is what the data
 says.
 
+## A. Amendments after contact with the data
+
+A pre-registration that is quietly edited is worthless, so every departure from
+§1-§8 is logged here with its reason and its cost. **No amendment touches the
+gate in §7** — the thresholds are exactly as first committed (`c0a6260`).
+
+### A1. xG/xAG are unavailable at this data grain; shots stand in
+*Found while fetching; §5.2 assumed npxG/90 as the finishing-stable co-signal.*
+
+FBref's **Big-5 Combined** view exposes only `standard`, `keeper`, `shooting`,
+`playing_time` and `misc` — there is no `passing` table, and the `shooting`
+table it does serve carries no Expected block. So npxG/90 and xAG are simply not
+available at this grain. Per-league fetching would likely restore them, but at
+5 leagues × 9 seasons it multiplies the scrape by ~5×, and FBref was already
+rate-limiting and intermittently returning CAPTCHA/block responses during the
+Big-5 pull. Getting blocked mid-project was judged a worse outcome than losing
+the co-signal.
+
+**Substitution:** `shots/90` replaces `npxG/90` as the co-signal for goals. It
+fills the same statistical role — a stable underlying volume signal behind noisy
+conversion — and is genuinely available.
+
+**Cost, stated plainly:** shots/90 is a cruder signal than npxG/90 (it ignores
+shot quality entirely), and assists lose their co-signal altogether, since xAG
+and key passes both live in the missing `passing` table. Assist talent is
+therefore estimated from shrunk raw assists alone and should be expected to be
+the weaker of the two projections. Restoring xG via per-league fetching is the
+first item of future work.
+
+### A2. The aging-variant choice moved to an inner split
+*Found while writing the runner; §5.3 said "let out-of-sample validation choose".*
+
+Taken literally, that instruction leaks: choosing the variant by its score on
+the test seasons gives the model two attempts at the gate and reports the better
+one, which is selection on the test set. The variant is instead chosen on an
+inner split carved out of the **training** seasons (fit 2017-2019, select on
+2020-2021), and the test seasons (2022-2024) are touched once, after the variant
+is fixed. This is stricter than the original wording, not looser.
+
+### A3. Showcase ranking is on attacking output, not minutes
+*Found when the selection returned goalkeepers; §5.6 said "ranked by minutes".*
+
+The youngest high-minute players in the Big-5 are mostly goalkeepers and
+full-backs, for whom a goal projection is meaningless. The showcase therefore
+ranks age ≤ 21 forwards and midfielders by non-penalty goals + assists. This
+selects *who is displayed* and has no bearing on the gate, which runs on the
+full unbiased cohort. It is a presentation choice, and it does select on
+outcome — so the showcase must not be read as a random sample of young players.
+
+### A4. Total goals added for record comparison only
+*Found when checking record units; §3 committed to league-only comparisons.*
+
+Published records count penalties (Messi's 474, Shearer's 260), while the
+model's honest unit is non-penalty goals, since penalty duty is a team role
+rather than a scoring skill. A total-goals projection was therefore added purely
+so record comparisons are apples-to-apples. **It runs through the same machinery
+but was not separately gated**, and is labelled as such wherever it is reported.
+
 ## 9. Known limitations (acknowledged in advance)
 
 - Big-5 domestic league only (§3).

@@ -138,29 +138,57 @@ def _prediction_frame(
     return out[out["n90_next"] >= min_n90_target].reset_index(drop=True)
 
 
-def _predict_series(
+def _sufficient_stats(
     panel: pd.DataFrame,
     targets: pd.DataFrame,
-    model: TalentModel,
+    events_col: str,
+    metric: str,
     curve: AgingCurve | None,
-) -> np.ndarray:
+    recency_weights: tuple[float, ...],
+    priors: dict[tuple[str, tuple[int, int]], float],
+    global_prior: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Precompute the parts of the prediction that do not depend on K.
+
+    The estimator is (Σ w·events + K·prior) / (Σ w·n90 + K). The two weighted
+    sums are properties of the player's history alone, so they are computed once
+    here and reused across the whole K grid, instead of re-slicing and
+    re-sorting every history for each candidate K.
+
+    Returns (weighted_events, weighted_n90, prior, aging_delta), all aligned to
+    `targets`.
+    """
     hist_by_player = {
-        key: grp for key, grp in panel.groupby([S.PLAYER, S.BORN], sort=False)
+        key: grp.sort_values(S.SEASON, ascending=False)
+        for key, grp in panel.groupby([S.PLAYER, S.BORN], sort=False)
     }
-    preds = np.empty(len(targets), dtype=float)
+    n = len(targets)
+    w_events = np.zeros(n)
+    w_n90 = np.zeros(n)
+    prior_arr = np.zeros(n)
+    delta_arr = np.zeros(n)
+
     for i, row in enumerate(targets.itertuples(index=False)):
-        player = getattr(row, S.PLAYER)
-        born = getattr(row, S.BORN)
-        from_season = row.from_season
+        key = (getattr(row, S.PLAYER), getattr(row, S.BORN))
         pos = getattr(row, S.POS)
-        age = getattr(row, S.AGE)
-        grp = hist_by_player.get((player, born))
-        hist = grp[grp[S.SEASON] <= from_season] if grp is not None else panel.iloc[0:0]
-        talent = model.estimate(hist, pos, age)
+        age = int(getattr(row, S.AGE))
+        prior_arr[i] = priors.get((pos, age_bucket(age)), global_prior)
         if curve is not None:
-            talent += curve.delta(pos, int(age), int(row.age_next))
-        preds[i] = talent
-    return preds
+            delta_arr[i] = curve.delta(pos, age, int(row.age_next))
+
+        grp = hist_by_player.get(key)
+        if grp is None:
+            continue
+        hist = grp[grp[S.SEASON] <= row.from_season]
+        if hist.empty:
+            continue
+        ev = hist[events_col].to_numpy()[: len(recency_weights)]
+        nn = hist[S.N90].to_numpy()[: len(recency_weights)]
+        w = np.asarray(recency_weights[: len(ev)])
+        w_events[i] = float((w * ev).sum())
+        w_n90[i] = float((w * nn).sum())
+
+    return w_events, w_n90, prior_arr, delta_arr
 
 
 def fit_K(
@@ -188,18 +216,24 @@ def fit_K(
     if targets.empty:
         raise ValueError("no training pairs available to fit K")
 
+    w_events, w_n90, prior_arr, delta_arr = _sufficient_stats(
+        train,
+        targets,
+        events_col,
+        metric,
+        curve,
+        DEFAULT_RECENCY_WEIGHTS,
+        priors,
+        global_prior,
+    )
+    actual = targets["actual_next"].to_numpy()
+    weights = targets["n90_next"].to_numpy()
+
     scores: dict[float, float] = {}
     for K in K_GRID:
-        model = TalentModel(
-            metric=metric,
-            events_col=events_col,
-            K=K,
-            priors=priors,
-            global_prior=global_prior,
-        )
-        preds = _predict_series(train, targets, model, curve)
-        err = np.abs(preds - targets["actual_next"].to_numpy())
-        scores[K] = float(np.average(err, weights=targets["n90_next"].to_numpy()))
+        preds = (w_events + K * prior_arr) / (w_n90 + K) + delta_arr
+        err = np.abs(preds - actual)
+        scores[K] = float(np.average(err, weights=weights))
     best = min(scores, key=scores.get)
     return best, scores
 
