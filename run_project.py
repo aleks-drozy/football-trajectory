@@ -20,13 +20,21 @@ Usage:
 from __future__ import annotations
 
 import json
+import sys
 import warnings
+import zlib
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
+
+# Windows consoles default to cp1252, which cannot encode plenty of real player
+# names (Yıldız, Diomandé, Paz...). Without this the pipeline dies on a print
+# after all the work is done, and the results file never gets written.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from data import schema as S
 from data.loader import build_panel
@@ -54,6 +62,16 @@ SHOWCASE_MIN_MINUTES = 1200
 SHOWCASE_POSITIONS = ("FW", "MF")
 SHOWCASE_N = 10
 ALWAYS_INCLUDE = [("Lamine Yamal", 2007)]
+
+
+def player_seed(player: str, salt: int = 0) -> int:
+    """Deterministic per-player seed.
+
+    Python's builtin hash() is salted per process (PYTHONHASHSEED), so seeding
+    with it would silently produce different projections on every run. crc32 is
+    stable across processes and machines.
+    """
+    return (zlib.crc32(player.encode("utf-8")) + salt) % (2**31)
 
 
 def load_panel() -> pd.DataFrame:
@@ -174,11 +192,11 @@ def main() -> int:
 
         npg_sim = simulate_player(
             state, npg_model, ast_model, npg_curves, ast_curves, minutes_model,
-            horizon=horizon, n_sims=N_SIMS, rng=np.random.default_rng(abs(hash(player)) % 2**31),
+            horizon=horizon, n_sims=N_SIMS, rng=np.random.default_rng(player_seed(player)),
         )
         gls_sim = simulate_player(
             state, gls_model, ast_model, gls_curves, ast_curves, minutes_model,
-            horizon=horizon, n_sims=N_SIMS, rng=np.random.default_rng((abs(hash(player)) + 7) % 2**31),
+            horizon=horizon, n_sims=N_SIMS, rng=np.random.default_rng(player_seed(player, salt=7)),
         )
 
         npg_tot = npg_sim.totals()

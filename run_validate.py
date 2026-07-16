@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import sys
 import warnings
 from pathlib import Path
 
@@ -28,6 +29,11 @@ import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
+
+# Windows consoles default to cp1252 and cannot encode many real player
+# names; without this a print can kill the run after all the work is done.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 from data import schema as S
 from data.loader import audit_identity, build_panel

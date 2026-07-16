@@ -194,7 +194,7 @@ def fit_aging_curve(
     support: dict[str, dict[int, int]] = {}
 
     for pos, grp in pairs.groupby(S.POS):
-        if pos == "GK" and metric in (S.NPG90, S.SH90):
+        if pos == "GK" and metric in (S.NPG90, S.SH90, S.GLS90):
             continue  # goalkeepers do not have a meaningful scoring curve
         # Mean delta for the step age -> age+1, weighted by workload.
         step: dict[int, float] = {}
