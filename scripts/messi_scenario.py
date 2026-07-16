@@ -53,7 +53,10 @@ RESULTS = ROOT / "results"
 
 # Messi, La Liga, league only, goals incl. penalties.
 # Source: statmuse.com/fc/ask/messi-la-liga-seasons (fetched 2026-07-16).
-# Verified: goals sum to 474 == the documented La Liga record total.
+# Verified twice: (1) goals sum to 474 == the documented record total;
+# (2) an independent FBref fetch of all 17 seasons (data/messi_seasons.csv,
+# via soccerdata, 2026-07-16) matches every season's goals exactly and
+# minutes within rounding.
 # Age convention matches the panel: season start year minus birth year (1987).
 MESSI = [
     # (season_start, age, minutes, goals)
