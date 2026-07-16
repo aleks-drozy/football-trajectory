@@ -65,9 +65,9 @@ mislabelled, and the pre-registration says so. The honest summary:
 
 > **Useful point projections. Untrustworthy intervals.**
 
-Per the §8 honesty commitment, the Yamal projection therefore ships with an
-explicit NOT TRUSTWORTHY label, and the fan chart below is a demonstration of
-that failure rather than a forecast.
+Per DESIGN.md's §8 honesty commitment, the Yamal projection therefore ships
+with an explicit NOT TRUSTWORTHY label (§4), as a demonstration of that failure
+rather than a forecast.
 
 ## 3. Where the calibration failure comes from
 
@@ -85,17 +85,104 @@ predictions:
    Under this hypothesis the overshoot is roughly flat across the board.
 
 `scripts/diagnose_calibration.py` splits coverage by predicted level and by
-position to separate them. See `results/calibration_diagnostic.json`.
+position to separate them. **The answer is hypothesis (1), decisively.**
 
-This also exposes a genuine flaw in my own pre-registration: **interval coverage
-is the wrong calibration test for a discrete, zero-inflated target.** The right
+At +1 season:
+
+| model expects | n | coverage | mean interval width | mean actual |
+|---|---|---|---|---|
+| median 0 goals | 1,045 | **93.0%** | 1.6 | 0.50 |
+| median 1-2 | 663 | 91.3% | 4.4 | 1.73 |
+| median 3-5 | 222 | **86.5%** | 8.8 | 4.62 |
+| median 6+ | 76 | **86.8%** | 14.0 | 8.13 |
+
+| position | n | coverage | width |
+|---|---|---|---|
+| GK | 144 | **100.0%** | **0.0** |
+| DF | 672 | 94.2% | 1.8 |
+| MF | 854 | 88.6% | 3.8 |
+| FW | 340 | 89.7% | 9.1 |
+
+**98-100% of the cohort has a 10th percentile of exactly 0**, so "covering zero"
+is close to automatic for most of it. The goalkeepers are the reductio: 144 of
+them, interval width **0.0**, coverage **100%** — the model predicts [0, 0], they
+score 0, and every one counts as "covered". That is not the model being cautious;
+it is the test being unable to say anything about an atom at zero.
+
+And coverage falls monotonically as the model expects more, landing at
+**86.5-86.8% for players it expects to actually score — inside the 72-88% pass
+band.** The aggregate 91.5% is carried by the ~1,200 defenders and goalkeepers
+for whom the goals question is close to meaningless.
+
+**This does not overturn the verdict.** The gate is pre-registered and it says
+NOT PROVEN; rescuing it after the fact with a sub-population that happens to
+pass is exactly the sin pre-registration exists to prevent, and the headline
+stands. What the diagnostic changes is the *diagnosis*: the spread is not
+obviously inflated, and the failure is concentrated where the test instrument
+cannot work.
+
+It also exposes a real flaw in my own pre-registration: **interval coverage is
+the wrong calibration test for a discrete, zero-inflated target.** The right
 instrument is a randomised PIT, which handles the atom at zero properly. I
-pre-registered the cruder test and am therefore stuck with reporting it — moving
-to a nicer test now, after seeing the result, is precisely the sin the
-pre-registration exists to prevent. It is the first item of future work, to be
-re-registered before it is run.
+pre-registered the cruder one, so I report it and live with it — swapping to a
+nicer test now, having seen the result, would be indefensible. It is the first
+item of future work, to be re-registered before it is run, and scored on a
+cohort where the question means something (regular attackers) rather than on
+every goalkeeper in Europe.
 
-## 4. Data
+## 4. So what about Yamal?
+
+Labelled **NOT TRUSTWORTHY**, as §2 requires. With that said, here is what the
+model produces (Big-5 domestic league only, from age 18 to a notional 38):
+
+| | median | 10-90% |
+|---|---|---|
+| future non-penalty goals | **31** | 7 - 72 |
+| future assists | **34** | 7 - 80 |
+| next season non-penalty goals | 5 | 1 - 11 |
+| **career total league goals** (incl. penalties, 30 already scored) | **69** | 38 - 120 |
+
+P(career ≥ 100 league goals) = **22%**. P(≥ 150) = 2.7%. P(≥ 200) = 0.2%.
+**P(beating Messi's 474 La Liga goals) = 0.0000.**
+
+The interval spans a factor of ten. That is the under-confidence of §2 made
+visible, and it is why the label is on it.
+
+**Why the model is this pessimistic — and where it is probably wrong.** The
+median is driven almost entirely by *availability*, not by talent. Simulating the
+minutes chain alone from Yamal's actual state (2,262 minutes at 18) gives a
+median of **9,794 career Big-5 minutes** (~109 × 90s) and:
+
+| still in the Big-5 at age | 20 | 23 | 26 | 30 | 34 |
+|---|---|---|---|---|---|
+| probability | 84% | **54%** | 39% | 25% | 8% |
+
+At his shrunk talent of ~0.32 npg/90, 109 × 90s ≈ 35 goals — which is the
+median the full simulation reports. So the projection is a statement about
+career length, not finishing.
+
+Is that base rate wrong? Not as an empirical fact: that really is what happens to
+the median teenager with 2,000+ Big-5 minutes. (I checked the obvious suspect —
+that a thin cell was backing off to a pool contaminated with 34-year-olds — and
+it isn't: the (2000-2500 minutes, under-20) cell has 48 observations of its own,
+and its observed P(zero next season) is **0.0**. The drop-off is real and
+happens later in the chain.)
+
+The flaw is narrower and more interesting: **the availability model conditions on
+minutes and age, and never on talent.** A generational 18-year-old is handed the
+dropout hazard of the *average* 18-year-old with similar minutes. Elite players
+keep their place far longer than average ones, and the model has no way to know
+Yamal is elite beyond his rate — which it then shrinks by K = 110. That
+plausibly drags the median down and, because pooling across talent levels
+inflates the minutes variance, widens the interval too. Conditioning availability
+on talent is the highest-value fix on the list, ahead of xG.
+
+The honest one-line answer to the original question: **the model says Yamal has
+essentially no chance of Messi's record — and the model is exactly the kind of
+model that would understate a generational talent.** Both halves of that sentence
+matter.
+
+## 5. Data
 
 FBref Big-5 domestic leagues via `soccerdata`, 2017-18 .. 2025-26:
 **24,057 player-seasons, 7,814 players.** FBref 403s plain HTTP requests, so the
@@ -125,7 +212,7 @@ label is absent the unlabelled rows can only belong to it. If that ever stops
 holding it raises rather than mislabelling a fifth of the data. Left unfixed,
 the Bundesliga would simply have been invisible to the concentration check.
 
-## 5. Method
+## 6. Method
 
 **Talent — Gamma-Poisson shrinkage.** A teenager's observed rate is mostly
 noise: 4 goals in 700 minutes is 0.51/90 and almost no evidence. Shrink toward a
@@ -178,7 +265,7 @@ one fudge factor: talent (Gamma posterior), availability (empirical minutes),
 event noise (Poisson), and aging-curve uncertainty (a bootstrap ensemble of 30
 curves, one assigned per path).
 
-## 6. Validation design
+## 7. Validation design
 
 Nine seasons, split three ways so nothing used to *choose* the model is used to
 *judge* it:
@@ -201,7 +288,7 @@ did score zero Big-5 goals. Dropping those rows would grade the model only on
 players who stuck around — the same survivor bias the aging curves exist to
 resist.
 
-## 7. What the tests caught
+## 8. What the tests caught
 
 The suite (72 tests, no network) exists because this kind of code fails
 silently — every bug below produced plausible-looking output:
@@ -229,7 +316,7 @@ calibrated predictor, an overconfident one, an underconfident one, a no-skill
 model, and an edge that lives in a single league — to confirm it fails when it
 should.
 
-## 8. Limitations
+## 9. Limitations
 
 - **No xG/xAG at this grain** (amendment A1). FBref's Big-5 Combined view serves
   no `passing` table and no Expected block. `shots/90` substitutes as the goals
@@ -247,7 +334,7 @@ should.
   it is not a random sample of young players. It has no bearing on the gate,
   which runs on the full unbiased cohort.
 
-## 9. Future work, in order
+## 10. Future work, in order
 
 1. **Re-register and run a randomised-PIT calibration test** — the current
    instrument cannot fairly assess a zero-inflated discrete target.
