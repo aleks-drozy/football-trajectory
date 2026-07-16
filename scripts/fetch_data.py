@@ -21,8 +21,6 @@ warnings.filterwarnings("ignore")
 
 RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
 
-# xG/xAG exist on FBref from 2017-2018 onward for the Big 5; earlier seasons
-# would silently lose the finishing-stable signal the talent model relies on.
 SEASONS = [
     "2017-2018",
     "2018-2019",
@@ -35,7 +33,10 @@ SEASONS = [
     "2025-2026",
 ]
 
-STAT_TYPES = ["standard", "shooting", "passing", "playing_time"]
+# "passing" is NOT offered for the Big-5 Combined view (soccerdata accepts only
+# standard/keeper/shooting/playing_time/misc there), so xAG and key passes are
+# unavailable at this grain. See DESIGN.md §A1 for the amendment this forces.
+STAT_TYPES = ["standard", "shooting", "playing_time"]
 
 
 def fetch_season(season: str) -> None:
