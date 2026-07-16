@@ -201,6 +201,34 @@ rather than a scoring skill. A total-goals projection was therefore added purely
 so record comparisons are apples-to-apples. **It runs through the same machinery
 but was not separately gated**, and is labelled as such wherever it is reported.
 
+### A5. v2 — availability conditioned on talent, and what that costs the gate
+*Made after the v1 gate had been run and reported. Logged loudly for that reason.*
+
+The v1 results (WRITEUP §4) showed the availability model was the dominant driver
+of every projection, and that it conditioned on (minutes, age) and **never on
+talent** — handing a generational teenager the dropout hazard of the average
+teenager with similar minutes. v2 adds a talent tercile (attacking output per 90,
+absolute cut points within position, carried forward from the last qualifying
+season, never read from the future). Effect on a Yamal-like state: median career
+minutes 9,794 → 14,939, P(still in the Big-5 at 30) 0.25 → 0.43.
+
+**The honesty cost, stated plainly.** The v1 gate was a clean single-shot test of
+a pre-registered hypothesis. v2 is a model change made *after seeing that result*.
+Re-running the same 2022-24 split therefore gives a **second look at a test set
+that has already been used**, and no amount of care makes that a clean number.
+Two things follow, and both are enforced in code rather than promised here:
+
+1. `results/gate.json` for v2 carries `test_status: "SECOND LOOK"`. It is
+   reported for information and must not be quoted as a pre-registered result.
+2. Season **2025-26 has never been used to evaluate anything** — the inner split
+   scored 2020-21, the gate scored 2022-24. `run_validate.py --fresh` trains
+   through 2024 and tests v2 on 2025 alone, giving **one genuinely clean
+   horizon** (`results/gate_fresh.json`, `test_status: "CLEAN"`). That is the
+   only v2 number with the standing of the v1 result, and it is the one to quote.
+
+The gate thresholds in §7 are still untouched. What changed is the model and the
+status of the evidence, not the bar.
+
 ## 9. Known limitations (acknowledged in advance)
 
 - Big-5 domestic league only (§3).

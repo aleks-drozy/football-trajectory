@@ -74,28 +74,38 @@ class SimResult:
 
 
 def _sample_minutes_vec(
-    model: MinutesModel, prev_minutes: np.ndarray, age: int, rng: np.random.Generator
+    model: MinutesModel,
+    prev_minutes: np.ndarray,
+    age: int,
+    rng: np.random.Generator,
+    talent_terciles: np.ndarray | None = None,
 ) -> np.ndarray:
     """Sample next-season minutes for every path at once.
 
-    Paths are grouped by minute bucket so each empirical pool is drawn from in
-    one vectorised call rather than per path.
+    Paths are grouped by (minute bucket, talent tercile) so each empirical pool
+    is drawn from in one vectorised call rather than per path.
+
+    `talent_terciles` is per-path, not per-player, and deliberately so: talent
+    is drawn from a posterior, so an uncertain teenager has paths landing in
+    different terciles. Collapsing to one tercile per player would throw away
+    exactly the interaction being modelled — that his career length depends on
+    how good he turns out to be.
     """
     out = np.empty(prev_minutes.shape[0], dtype=float)
     ab = age_bucket_idx(age)
     buckets = np.array([minute_bucket(m) for m in prev_minutes])
+    tts = (
+        np.full(prev_minutes.shape[0], -1, dtype=int)
+        if talent_terciles is None
+        else talent_terciles
+    )
     for mb in np.unique(buckets):
-        idx = np.flatnonzero(buckets == mb)
-        pool = model.cells.get((int(mb), ab))
-        from model.minutes import MIN_CELL
-
-        if pool is None or len(pool) < MIN_CELL:
-            pool = model.by_minutes.get(int(mb))
-        if pool is None or len(pool) < MIN_CELL:
-            pool = model.by_age.get(ab)
-        if pool is None or len(pool) == 0:
-            pool = model.overall
-        out[idx] = rng.choice(pool, size=idx.size, replace=True)
+        for tt in np.unique(tts):
+            idx = np.flatnonzero((buckets == mb) & (tts == tt))
+            if idx.size == 0:
+                continue
+            pool = model.pool_for(int(mb), ab, None if tt < 0 else int(tt))
+            out[idx] = rng.choice(pool, size=idx.size, replace=True)
     return out
 
 
@@ -124,6 +134,15 @@ def simulate_player(
     npg_idx = rng.integers(0, len(npg_curves), size=n_sims)
     ast_idx = rng.integers(0, len(ast_curves), size=n_sims)
 
+    # Availability is conditioned on how good each path turns out to be, using
+    # that path's own drawn talent (model/minutes.py). Without this a
+    # generational teenager inherits the average teenager's dropout hazard.
+    from model.minutes import talent_terciles_vec
+
+    terciles = talent_terciles_vec(
+        talent_npg + talent_ast, state.pos, minutes_model.talent_cuts
+    )
+
     minutes = np.full(n_sims, float(state.minutes))
     out_min = np.zeros((n_sims, horizon))
     out_g = np.zeros((n_sims, horizon))
@@ -131,7 +150,9 @@ def simulate_player(
 
     for h in range(horizon):
         target_age = state.age + h + 1
-        minutes = _sample_minutes_vec(minutes_model, minutes, target_age, rng)
+        minutes = _sample_minutes_vec(
+            minutes_model, minutes, target_age, rng, talent_terciles=terciles
+        )
         n90 = minutes / 90.0
 
         d_npg = np.array(

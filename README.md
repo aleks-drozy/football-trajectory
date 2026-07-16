@@ -43,8 +43,30 @@ answer to "how much should we believe Yamal's 0.52 npg/90 at 18?"
 
 Full method, data-quality findings, and limitations: **[WRITEUP.md](WRITEUP.md)**.
 The pre-registration and its amendment log: **[DESIGN.md](DESIGN.md)**.
+New here? **[HOW_TO_READ_THIS.md](HOW_TO_READ_THIS.md)** is a guided path through
+the repo.
 
 This is a research project, not a scouting tool.
+
+## v2 — availability now conditions on talent
+
+The v1 results made one flaw obvious: the availability model conditioned on
+(minutes, age) and **never on talent**, so a generational teenager inherited the
+dropout hazard of the *average* teenager with similar minutes. That, not
+finishing, was driving every projection.
+
+v2 adds a talent tercile (attacking output/90, absolute cut points within
+position, carried forward from the last qualifying season, never read from the
+future). For a Yamal-like state it moves median career minutes **9,794 →
+14,939** and P(still in the Big-5 at 30) from **0.25 → 0.43**, and it improves
+inner-split MAE **1.3574 → 1.3407** — clean, leak-free evidence that it helps.
+
+**One caveat, enforced in the output files.** v2 was built *after* seeing the v1
+gate, so re-running the same 2022-24 split is a **second look at a spent test
+set** — `results/gate.json` says so in `test_status`. Season 2025-26 was never
+used to evaluate anything, so `run_validate.py --fresh` tests v2 on it alone:
+`results/gate_fresh.json`, `test_status: "CLEAN"`. **That is the v2 number to
+quote.**
 
 ## Quick start
 

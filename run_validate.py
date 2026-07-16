@@ -14,8 +14,17 @@ model would get two attempts at the gate and report the better one. So the
 choice is made on an inner split carved out of training data, and the test
 seasons are not touched until the chosen variant is fixed.
 
+`--fresh` and why it exists: v2 conditions availability on talent
+(model/minutes.py). Re-running the default split after changing the model is a
+*second look at the same test seasons* — informative, but no longer a clean
+single-shot test, and labelled as such wherever it appears. Season 2025-26 was
+never used to evaluate anything (the inner split scored 2020-21, the gate scored
+2022-24), so `--fresh` trains through 2024 and tests v2 on 2025 alone. One
+horizon, but genuinely untouched data.
+
 Usage:
     python run_validate.py            # -> results/gate.json
+    python run_validate.py --fresh    # -> results/gate_fresh.json  (2025, unseen)
 """
 
 from __future__ import annotations
@@ -56,6 +65,14 @@ INNER_HORIZONS = 2
 FINAL_TRAIN = [2017, 2018, 2019, 2020, 2021]
 FINAL_BASE = 2021
 FINAL_HORIZONS = 3
+
+# Fresh test: 2025-26 has never been used to evaluate anything, so it is the one
+# clean look available for the v2 (talent-conditioned) model. Training through
+# 2024 is fine — training on previously *scored* seasons does not contaminate a
+# test on a season nothing has ever touched.
+FRESH_TRAIN = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+FRESH_BASE = 2024
+FRESH_HORIZONS = 1
 
 N_SIMS = 1500
 N_BOOT_CURVES = 30
@@ -106,11 +123,21 @@ def select_variant(panel: pd.DataFrame) -> tuple[str, dict]:
 
 
 def main() -> int:
+    fresh = "--fresh" in sys.argv
+    train = FRESH_TRAIN if fresh else FINAL_TRAIN
+    base = FRESH_BASE if fresh else FINAL_BASE
+    horizons = FRESH_HORIZONS if fresh else FINAL_HORIZONS
+    out_name = "gate_fresh.json" if fresh else "gate.json"
+
     RESULTS.mkdir(exist_ok=True)
     panel = load_panel()
     audit = audit_identity(panel)
     print(f"panel: {panel.shape}")
     print(f"identity: {audit.summary()}\n")
+
+    if fresh:
+        print("FRESH TEST — season 2025-26, never used to evaluate anything before.")
+        print("Variant reused from the inner split; no selection happens here.\n")
 
     print("selecting aging-curve variant on the inner split...")
     variant, selection = select_variant(panel)
@@ -118,16 +145,20 @@ def main() -> int:
         print(f"  {v:10s} inner mean MAE = {d['mean_mae']:.4f}")
     print(f"  -> chosen: {variant}\n")
 
-    print(f"fitting final system on {FINAL_TRAIN} (variant={variant})...")
-    system = fit_system(panel, FINAL_TRAIN, variant=variant, n_boot=N_BOOT_CURVES)
+    print(f"fitting final system on {train} (variant={variant})...")
+    system = fit_system(panel, train, variant=variant, n_boot=N_BOOT_CURVES)
     print(f"  fitted K (npg)     = {system.K_npg}")
     print(f"  fitted K (assists) = {system.K_ast}")
-    print(f"  bootstrap curves   = {len(system.npg_curves)} npg / {len(system.ast_curves)} ast\n")
+    print(f"  bootstrap curves   = {len(system.npg_curves)} npg / {len(system.ast_curves)} ast")
+    print(
+        f"  minutes cells with talent support: "
+        f"{system.minutes_model.talent_conditioned_share():.0%}\n"
+    )
 
-    cohort = build_cohort(panel, FINAL_BASE)
-    print(f"test cohort: {len(cohort)} players from {FINAL_BASE}")
-    print(f"projecting {FINAL_HORIZONS} seasons x {N_SIMS} sims...\n")
-    sims = project_cohort(panel, system, cohort, FINAL_HORIZONS, n_sims=N_SIMS, seed=0)
+    cohort = build_cohort(panel, base)
+    print(f"test cohort: {len(cohort)} players from {base}")
+    print(f"projecting {horizons} season(s) x {N_SIMS} sims...\n")
+    sims = project_cohort(panel, system, cohort, horizons, n_sims=N_SIMS, seed=0)
 
     groups = {
         "league": cohort[S.LEAGUE].to_numpy(),
@@ -139,11 +170,19 @@ def main() -> int:
         "identity_audit": audit.summary(),
         "variant_selection": selection,
         "variant": variant,
-        "train_seasons": FINAL_TRAIN,
-        "base_season": FINAL_BASE,
-        "test_seasons": [FINAL_BASE + h for h in range(1, FINAL_HORIZONS + 1)],
+        "model_version": "v2 (availability conditioned on talent)",
+        "test_status": (
+            "CLEAN - 2025-26 was never used to evaluate anything before this run"
+            if fresh
+            else "SECOND LOOK - these test seasons already scored the v1 model, so "
+                 "this is not a clean single-shot result; see gate_fresh.json"
+        ),
+        "train_seasons": train,
+        "base_season": base,
+        "test_seasons": [base + h for h in range(1, horizons + 1)],
         "cohort_n": int(len(cohort)),
         "n_sims": N_SIMS,
+        "talent_conditioned_cell_share": system.minutes_model.talent_conditioned_share(),
         "fitted_K": {"npg": system.K_npg, "assists": system.K_ast},
         "K_scores": {
             "npg": {str(k): v for k, v in system.K_scores_npg.items()},
@@ -154,9 +193,9 @@ def main() -> int:
 
     for metric, events_col in METRIC_EVENTS.items():
         out["gates"][metric] = []
-        for h in range(1, FINAL_HORIZONS + 1):
-            actual = actuals_at(panel, cohort, FINAL_BASE + h, events_col)
-            baselines = _baselines_for(panel, cohort, FINAL_TRAIN, events_col, h)
+        for h in range(1, horizons + 1):
+            actual = actuals_at(panel, cohort, base + h, events_col)
+            baselines = _baselines_for(panel, cohort, train, events_col, h)
             res = evaluate_gate(
                 horizon=h,
                 metric=metric,
@@ -184,8 +223,8 @@ def main() -> int:
                 f"-> {'PASS' if res.concentration.passed else 'FAIL'}\n"
             )
 
-    (RESULTS / "gate.json").write_text(json.dumps(out, indent=2, default=float))
-    print(f"-> {RESULTS / 'gate.json'}")
+    (RESULTS / out_name).write_text(json.dumps(out, indent=2, default=float))
+    print(f"-> {RESULTS / out_name}")
     return 0
 
 

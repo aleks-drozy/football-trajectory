@@ -182,6 +182,58 @@ essentially no chance of Messi's record — and the model is exactly the kind of
 model that would understate a generational talent.** Both halves of that sentence
 matter.
 
+## 4b. v2 — conditioning availability on talent
+
+§4 identified the biggest flaw: availability conditioned on (minutes, age) and
+**never on talent**, so a generational teenager inherited the average teenager's
+dropout hazard. v2 fixes exactly that, with a talent tercile — attacking output
+per 90, **absolute** cut points within position, **carried forward** from the last
+qualifying season and never read from the future. (Absolute rather than
+age-relative because keeping your place depends on how good you are, not how good
+you are *for your age*: age-relative cuts would say a teenager stops being good
+the moment he turns 24.)
+
+**It works, on the measure that is clean.** Inner-split MAE — the split used to
+choose the variant, never the test — improves **1.3574 → 1.3407**. On a
+Yamal-like state (2,262 minutes at 18, which lands in the strong tercile, his
+0.955/90 being nearly double the FW cut of 0.516):
+
+| | v1 | v2 (strong) |
+|---|---|---|
+| median career Big-5 minutes | 9,794 | **14,939** |
+| P(still in the Big-5 at 23) | 0.54 | **0.74** |
+| P(still in the Big-5 at 30) | 0.25 | **0.43** |
+
+89% of the 168 (minutes, age, talent) cells clear the support threshold on the
+full panel (80% on the shorter training split), so the new dimension is genuinely
+used rather than quietly backing off.
+
+**On the gate, it moves skill and leaves calibration alone:**
+
+| metric | h | calibration v1 → v2 | MAE v1 → v2 |
+|---|---|---|---|
+| goals | +1 | 91.5% → 91.3% | 1.279 → 1.271 |
+| goals | +2 | 91.2% → 91.2% | 1.200 → 1.175 |
+| goals | +3 | 90.4% → 90.5% | 1.093 → **1.063** |
+| assists | +1 | 92.2% → 91.9% | 0.985 → 0.989 |
+| assists | +2 | 91.8% → 91.7% | 0.962 → 0.945 |
+| assists | +3 | 89.4% → 89.8% | 0.900 → **0.864** |
+
+Skill improves at five of six horizons and the gain **grows with horizon** —
+which is what it should do, since availability compounds the further out you
+project. Calibration is untouched, also as expected: §3 showed that failure is
+the test instrument meeting a zero-inflated target, not the width of the minutes
+distribution. **Every horizon is still NOT PROVEN.**
+
+**What this costs in evidential standing.** v2 was built *after* seeing the v1
+gate, so re-running the same 2022-24 split is a **second look at a spent test
+set**. The table above is reported for information and is labelled
+`test_status: "SECOND LOOK"` in `results/gate.json`. It is not a pre-registered
+result and must not be quoted as one. Season 2025-26 was never used to evaluate
+anything, so `run_validate.py --fresh` trains through 2024 and tests v2 on 2025
+alone — one clean horizon, in `results/gate_fresh.json` with
+`test_status: "CLEAN"`. See DESIGN.md §A5.
+
 ## 5. Data
 
 FBref Big-5 domestic leagues via `soccerdata`, 2017-18 .. 2025-26:

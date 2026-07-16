@@ -13,10 +13,16 @@ import pytest
 
 from data import schema as S
 from model.minutes import (
+    TALENT_MIN_N90,
+    UNKNOWN_TERCILE,
     age_bucket_idx,
+    attach_carried_talent,
     fit_minutes_model,
+    fit_talent_cuts,
     materialise_absences,
     minute_bucket,
+    talent_tercile,
+    talent_terciles_vec,
 )
 from tests.conftest import make_player_season
 
@@ -127,6 +133,151 @@ def test_minute_buckets_are_ordered_and_cover_the_range():
 
 def test_age_buckets_are_monotonic():
     assert age_bucket_idx(17) <= age_bucket_idx(23) <= age_bucket_idx(35)
+
+
+# --- talent conditioning (v2) -------------------------------------------------
+
+
+def _talent_panel() -> pd.DataFrame:
+    """Strong and weak players at identical minutes, with different fates.
+
+    Every player starts on 2,700 minutes at 24. The strong ones keep playing;
+    the weak ones fall out. Minutes and age alone cannot tell them apart — only
+    talent can — so this is the fixture that proves conditioning works.
+    """
+    rows = []
+    for i in range(60):  # strong: 0.8/90 attacking output, keep their place
+        rows.append(make_player_season(f"Strong{i}", 1993, 2017, 2700, npg=15, assists=9))
+        rows.append(make_player_season(f"Strong{i}", 1993, 2018, 2700, npg=15, assists=9))
+    for i in range(60):  # weak: 0.033/90, gone next season
+        rows.append(make_player_season(f"Weak{i}", 1993, 2017, 2700, npg=1, assists=0))
+        # no 2018 row -> a real zero
+    for i in range(60):  # padding so the weak cohort isn't the whole bottom
+        rows.append(make_player_season(f"Mid{i}", 1993, 2017, 2700, npg=6, assists=3))
+        rows.append(make_player_season(f"Mid{i}", 1993, 2018, 2700, npg=6, assists=3))
+    return pd.DataFrame(rows)
+
+
+def test_talent_cuts_are_ordered_and_per_position():
+    panel = _talent_panel()
+    cuts = fit_talent_cuts(panel)
+    assert "FW" in cuts
+    lo, hi = cuts["FW"]
+    assert lo < hi
+
+
+def test_talent_tercile_bands():
+    cuts = {"FW": (0.2, 0.6)}
+    assert talent_tercile(0.05, "FW", cuts) == 0
+    assert talent_tercile(0.4, "FW", cuts) == 1
+    assert talent_tercile(0.9, "FW", cuts) == 2
+
+
+def test_unknown_talent_is_neutral_not_an_error():
+    cuts = {"FW": (0.2, 0.6)}
+    assert talent_tercile(float("nan"), "FW", cuts) == UNKNOWN_TERCILE
+    assert talent_tercile(None, "FW", cuts) == UNKNOWN_TERCILE
+    assert talent_tercile(0.4, "NOPE", cuts) == UNKNOWN_TERCILE  # unseen position
+
+
+def test_vectorised_terciles_match_the_scalar_version():
+    cuts = {"FW": (0.2, 0.6)}
+    rates = np.array([0.05, 0.4, 0.9, np.nan])
+    got = talent_terciles_vec(rates, "FW", cuts)
+    expected = [talent_tercile(float(r), "FW", cuts) for r in rates]
+    assert list(got) == expected
+
+
+def test_talent_is_carried_forward_into_absent_seasons():
+    """A player at zero minutes keeps the talent he last demonstrated — that is
+    what decides whether he comes back, and a zero-minute row has no rate."""
+    panel = pd.DataFrame(
+        [
+            make_player_season("Star", 1995, 2017, 2700, npg=20, assists=10),
+            make_player_season("Star", 1995, 2019, 2700, npg=20, assists=10),
+        ]
+    )
+    cuts = fit_talent_cuts(panel)
+    full = attach_carried_talent(materialise_absences(panel), cuts)
+    gap = full[(full[S.PLAYER] == "Star") & (full[S.SEASON] == 2018)]
+    played = full[(full[S.PLAYER] == "Star") & (full[S.SEASON] == 2017)]
+    assert gap["_tt"].iloc[0] == played["_tt"].iloc[0]
+
+
+def test_talent_never_read_from_the_future():
+    """Entering his first season a player has no track record, so his tercile
+    must be the neutral default — not his own later form."""
+    panel = pd.DataFrame(
+        [
+            make_player_season("Rookie", 2000, 2017, 200, npg=0, assists=0),  # below floor
+            make_player_season("Rookie", 2000, 2018, 2700, npg=25, assists=10),  # elite
+        ]
+    )
+    cuts = fit_talent_cuts(panel)
+    full = attach_carried_talent(materialise_absences(panel), cuts)
+    first = full[(full[S.PLAYER] == "Rookie") & (full[S.SEASON] == 2017)]
+    assert first["_tt"].iloc[0] == UNKNOWN_TERCILE
+
+
+def test_thin_season_does_not_overwrite_a_known_talent_level():
+    panel = pd.DataFrame(
+        [
+            make_player_season("Vet", 1990, 2017, 2700, npg=20, assists=10),
+            make_player_season("Vet", 1990, 2018, 90, npg=0, assists=0),  # one cameo
+        ]
+    )
+    cuts = fit_talent_cuts(panel)
+    full = attach_carried_talent(materialise_absences(panel), cuts)
+    rows = full[full[S.PLAYER] == "Vet"].sort_values(S.SEASON)
+    assert rows["_tt"].iloc[1] == rows["_tt"].iloc[0], "a cameo must not redefine talent"
+
+
+def test_talent_conditioning_separates_identical_minutes():
+    """The point of the change: same minutes, same age, different fate."""
+    panel = _talent_panel()
+    model = fit_minutes_model(panel)
+    rng = np.random.default_rng(0)
+
+    strong = model.sample(2700, 24, rng, size=4000, attack_rate=0.80, pos="FW")
+    weak = model.sample(2700, 24, rng, size=4000, attack_rate=0.033, pos="FW")
+
+    assert np.mean(weak == 0) > np.mean(strong == 0), (
+        "the weak cohort dropped out and the strong one did not; conditioning on "
+        "talent must reproduce that"
+    )
+    assert np.mean(strong == 0) < 0.1
+
+
+def test_omitting_talent_falls_back_rather_than_assuming():
+    """No talent supplied must mean 'unconditioned', not 'middling'."""
+    panel = _talent_panel()
+    model = fit_minutes_model(panel)
+    rng = np.random.default_rng(0)
+    pooled = model.sample(2700, 24, rng, size=4000)
+    strong = model.sample(2700, 24, rng, size=4000, attack_rate=0.80, pos="FW")
+    weak = model.sample(2700, 24, rng, size=4000, attack_rate=0.033, pos="FW")
+    p_pooled, p_strong, p_weak = (np.mean(x == 0) for x in (pooled, strong, weak))
+    assert p_strong <= p_pooled <= p_weak
+
+
+def test_talent_cuts_respect_the_training_cutoff():
+    """Cut points must not be computed from seasons past the split."""
+    panel = _talent_panel()
+    tampered = panel.copy()
+    extra = pd.DataFrame(
+        [make_player_season(f"Future{i}", 1993, 2019, 2700, npg=40, assists=20) for i in range(50)]
+    )
+    tampered = pd.concat([tampered, extra], ignore_index=True)
+
+    a = fit_minutes_model(panel, max_season=2018)
+    b = fit_minutes_model(tampered, max_season=2018)
+    assert a.talent_cuts == b.talent_cuts
+
+
+def test_cell_support_is_reported():
+    model = fit_minutes_model(_talent_panel())
+    assert model.cell_support(), "expected some (minutes, age, talent) cells"
+    assert 0.0 <= model.talent_conditioned_share() <= 1.0
 
 
 def test_max_season_censors_training_data():
