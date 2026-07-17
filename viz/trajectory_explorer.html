@@ -240,7 +240,7 @@
         <button data-metric="assists" aria-pressed="false">Assists</button>
         <button data-metric="minutes" aria-pressed="false">Minutes</button>
       </div>
-      <span class="label" id="arcLabel" style="display:none">What if he were…</span>
+      <span class="label" id="arcLabel">Compare to a legend</span>
       <div class="segmented" id="arcSeg" role="group" aria-label="Legend arc scenario" style="display:none"></div>
       <div class="segmented" id="modeSeg" role="group" aria-label="Scenario mode" style="display:none">
         <button data-mode="at_rate" aria-pressed="true">At his rate</button>
@@ -18437,6 +18437,13 @@
     seg.addEventListener("click", e => {
       const btn = e.target.closest("button"); if (!btn || btn.disabled) return;
       state.legend = btn.dataset.legend || null;
+      // A legend arc is a career-total story, so choosing one takes you to the
+      // view that can actually show it rather than silently doing nothing.
+      if (state.legend && state.view !== "career") {
+        state.view = "career";
+        [...byId("viewSeg").children].forEach(b =>
+          b.setAttribute("aria-pressed", b.dataset.view === "career" ? "true" : "false"));
+      }
       render();
     });
   }
@@ -18447,9 +18454,12 @@
     render();
   });
   function syncArcSeg() {
+    // The arc controls used to appear only inside the career view, which hid the
+    // feature well enough that it had to be explained. They are always visible
+    // now; choosing a legend switches the view for you.
     const careers = state.view === "career";
-    byId("arcSeg").style.display = careers ? "inline-flex" : "none";
-    byId("arcLabel").style.display = careers ? "inline" : "none";
+    byId("arcSeg").style.display = "inline-flex";
+    byId("arcLabel").style.display = "inline";
     [...byId("arcSeg").children].forEach(b => {
       const name = b.dataset.legend;
       const available = !name || !!pairFor(state.player, name);
