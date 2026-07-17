@@ -82,6 +82,26 @@ Different base season, different test season, near-identical numbers to v1's
 projections, untrustworthy intervals" is not an artefact of one split** — it
 survived a clean replication, which is the strongest claim this project makes.
 
+## The interactive explorer
+
+`viz/trajectory_explorer.html` is a self-contained page (open it in any browser
+— data embedded, no server needed): pick any of 16 young attackers, see the
+projected fan of goals / assists / minutes from now to age 38, and — in the
+career view — graft a legend's real arc onto them with the **"what if he ages
+like…"** selector: Messi, Cristiano Ronaldo, or Benzema, each built from their
+actual season-by-season league record (all verified against FBref; Messi's sums
+to exactly his 474 record). The fan says what usually happens; the gold dashed
+line says what following one of the greatest careers ever would look like. The
+page carries the model's honest verdict on itself either way.
+
+Rebuild after re-running the pipeline:
+
+```bash
+python scripts/export_trajectories.py    # per-season bands  -> results/trajectories.json
+python scripts/legend_scenarios.py       # legend arcs       -> results/legend_scenarios.json
+python scripts/build_viz.py              # inject into viz/template.html -> the page
+```
+
 ## Quick start
 
 ```bash

@@ -1,0 +1,655 @@
+{
+  "panel_rows": 24057,
+  "identity_audit": "panel rows=24057, distinct (name,born) players=7814; names reused across birth years=51; implausible-minute player-seasons=1 (0.004%)",
+  "variant_selection": {
+    "scores": {
+      "survivors": {
+        "mae_by_horizon": [
+          1.3368502316006177,
+          1.3445702521873393
+        ],
+        "mean_mae": 1.3407102418939785
+      },
+      "dropouts": {
+        "mae_by_horizon": [
+          1.331188883170355,
+          1.3636129696345858
+        ],
+        "mean_mae": 1.3474009264024704
+      }
+    },
+    "chosen": "survivors",
+    "split": "inner (2020-2021)"
+  },
+  "variant": "survivors",
+  "model_version": "v2 (availability conditioned on talent)",
+  "test_status": "SECOND LOOK - these test seasons already scored the v1 model, so this is not a clean single-shot result; see gate_fresh.json",
+  "train_seasons": [
+    2017,
+    2018,
+    2019,
+    2020,
+    2021
+  ],
+  "base_season": 2021,
+  "test_seasons": [
+    2022,
+    2023,
+    2024
+  ],
+  "cohort_n": 2010,
+  "n_sims": 1500,
+  "talent_conditioned_cell_share": 0.8023952095808383,
+  "fitted_K": {
+    "npg": 110.0,
+    "assists": 110.0
+  },
+  "K_scores": {
+    "npg": {
+      "1.0": 0.07023954874907404,
+      "2.0": 0.06962529253670505,
+      "3.0": 0.06913183292775052,
+      "5.0": 0.0683483870210661,
+      "8.0": 0.06747160217064097,
+      "12.0": 0.06659585848100524,
+      "17.0": 0.06576298625263924,
+      "25.0": 0.06479717289471669,
+      "35.0": 0.06398248349999108,
+      "50.0": 0.06322866176787946,
+      "75.0": 0.06259935108516072,
+      "110.0": 0.06237196085401335,
+      "160.0": 0.06253686916583284
+    },
+    "assists": {
+      "1.0": 0.06402504457587696,
+      "2.0": 0.06332521887240763,
+      "3.0": 0.06286469975990222,
+      "5.0": 0.06219621750378742,
+      "8.0": 0.06145397540562398,
+      "12.0": 0.06071041871785023,
+      "17.0": 0.06001273220485074,
+      "25.0": 0.059181488470506256,
+      "35.0": 0.05846929027334333,
+      "50.0": 0.05776332927219795,
+      "75.0": 0.057182470127382014,
+      "110.0": 0.05697104910735934,
+      "160.0": 0.05713252710752547
+    }
+  },
+  "gates": {
+    "goals": [
+      {
+        "horizon": 1,
+        "metric": "goals",
+        "calibration": {
+          "nominal": 0.8,
+          "coverage": 0.9134328358208955,
+          "lo_bound": 0.72,
+          "hi_bound": 0.88,
+          "n": 2010,
+          "passed": false
+        },
+        "skill": {
+          "model_mae": 1.271144278606965,
+          "baseline_maes": {
+            "persistence": 1.6422885572139303,
+            "cohort_mean": 1.7295277358234762
+          },
+          "best_baseline": "persistence",
+          "best_baseline_mae": 1.6422885572139303,
+          "diff": -0.3711442786069652,
+          "ci_lo": -0.4460385572139304,
+          "ci_hi": -0.2999751243781096,
+          "passed": true
+        },
+        "concentration": {
+          "groups": {
+            "league!=ENG-Premier League": {
+              "n": 1616,
+              "diff": -0.3694306930693069,
+              "ci_lo": -0.4511138613861386,
+              "ci_hi": -0.2880569306930693,
+              "passed": true
+            },
+            "league!=ESP-La Liga": {
+              "n": 1586,
+              "diff": -0.34363177805800754,
+              "ci_lo": -0.425922131147541,
+              "ci_hi": -0.25914249684741486,
+              "passed": true
+            },
+            "league!=FRA-Ligue 1": {
+              "n": 1592,
+              "diff": -0.37374371859296485,
+              "ci_lo": -0.45571608040201006,
+              "ci_hi": -0.28800251256281406,
+              "passed": true
+            },
+            "league!=GER-Bundesliga": {
+              "n": 1662,
+              "diff": -0.4076413959085439,
+              "ci_lo": -0.49459235860409145,
+              "ci_hi": -0.3267148014440433,
+              "passed": true
+            },
+            "league!=ITA-Serie A": {
+              "n": 1584,
+              "diff": -0.3595328282828283,
+              "ci_lo": -0.44034880050505054,
+              "ci_hi": -0.27836963383838403,
+              "passed": true
+            },
+            "pos!=DF": {
+              "n": 1338,
+              "diff": -0.4155455904334828,
+              "ci_lo": -0.5171898355754858,
+              "ci_hi": -0.3094170403587444,
+              "passed": true
+            },
+            "pos!=FW": {
+              "n": 1670,
+              "diff": -0.3083832335329341,
+              "ci_lo": -0.3703667664670659,
+              "ci_hi": -0.2442964071856288,
+              "passed": true
+            },
+            "pos!=GK": {
+              "n": 1866,
+              "diff": -0.39978563772775993,
+              "ci_lo": -0.47910637727759914,
+              "ci_hi": -0.3199222936763131,
+              "passed": true
+            },
+            "pos!=MF": {
+              "n": 1156,
+              "diff": -0.36418685121107264,
+              "ci_lo": -0.4679930795847751,
+              "ci_hi": -0.25561202422145335,
+              "passed": true
+            }
+          },
+          "passed": true
+        },
+        "verdict": "NOT PROVEN",
+        "passed": false
+      },
+      {
+        "horizon": 2,
+        "metric": "goals",
+        "calibration": {
+          "nominal": 0.8,
+          "coverage": 0.9124378109452737,
+          "lo_bound": 0.72,
+          "hi_bound": 0.88,
+          "n": 2010,
+          "passed": false
+        },
+        "skill": {
+          "model_mae": 1.1746268656716419,
+          "baseline_maes": {
+            "persistence": 1.8049751243781094,
+            "cohort_mean": 1.7582009798148177
+          },
+          "best_baseline": "cohort_mean",
+          "best_baseline_mae": 1.7582009798148177,
+          "diff": -0.5835741141431758,
+          "ci_lo": -0.65674867104306,
+          "ci_hi": -0.5101027519859287,
+          "passed": true
+        },
+        "concentration": {
+          "groups": {
+            "league!=ENG-Premier League": {
+              "n": 1616,
+              "diff": -0.6080240687060586,
+              "ci_lo": -0.6949618232332311,
+              "ci_hi": -0.5236296323078633,
+              "passed": true
+            },
+            "league!=ESP-La Liga": {
+              "n": 1586,
+              "diff": -0.5907218080783259,
+              "ci_lo": -0.6751005551256113,
+              "ci_hi": -0.5081049401904997,
+              "passed": true
+            },
+            "league!=FRA-Ligue 1": {
+              "n": 1592,
+              "diff": -0.5518863412732055,
+              "ci_lo": -0.636255841831533,
+              "ci_hi": -0.46669074637509317,
+              "passed": true
+            },
+            "league!=GER-Bundesliga": {
+              "n": 1662,
+              "diff": -0.5830940849015058,
+              "ci_lo": -0.6635911518130563,
+              "ci_hi": -0.5045929456546172,
+              "passed": true
+            },
+            "league!=ITA-Serie A": {
+              "n": 1584,
+              "diff": -0.5838249814751716,
+              "ci_lo": -0.6670530694173619,
+              "ci_hi": -0.49288638615116015,
+              "passed": true
+            },
+            "pos!=DF": {
+              "n": 1338,
+              "diff": -0.7382852823057807,
+              "ci_lo": -0.8455266847191447,
+              "ci_hi": -0.6337317627768192,
+              "passed": true
+            },
+            "pos!=FW": {
+              "n": 1670,
+              "diff": -0.40457685456498654,
+              "ci_lo": -0.4550409599701339,
+              "ci_hi": -0.35853490794616927,
+              "passed": true
+            },
+            "pos!=GK": {
+              "n": 1866,
+              "diff": -0.6283886185847649,
+              "ci_lo": -0.7059378683753771,
+              "ci_hi": -0.5450689497204702,
+              "passed": true
+            },
+            "pos!=MF": {
+              "n": 1156,
+              "diff": -0.5907523279892011,
+              "ci_lo": -0.6984100705604553,
+              "ci_hi": -0.485570199212133,
+              "passed": true
+            }
+          },
+          "passed": true
+        },
+        "verdict": "NOT PROVEN",
+        "passed": false
+      },
+      {
+        "horizon": 3,
+        "metric": "goals",
+        "calibration": {
+          "nominal": 0.8,
+          "coverage": 0.9049751243781095,
+          "lo_bound": 0.72,
+          "hi_bound": 0.88,
+          "n": 2010,
+          "passed": false
+        },
+        "skill": {
+          "model_mae": 1.06318407960199,
+          "baseline_maes": {
+            "persistence": 1.927363184079602,
+            "cohort_mean": 1.804849210194794
+          },
+          "best_baseline": "cohort_mean",
+          "best_baseline_mae": 1.804849210194794,
+          "diff": -0.741665130592804,
+          "ci_lo": -0.8188373670895845,
+          "ci_hi": -0.6576330844945808,
+          "passed": true
+        },
+        "concentration": {
+          "groups": {
+            "league!=ENG-Premier League": {
+              "n": 1616,
+              "diff": -0.7938318410972923,
+              "ci_lo": -0.8872754379892922,
+              "ci_hi": -0.7065172568207659,
+              "passed": true
+            },
+            "league!=ESP-La Liga": {
+              "n": 1586,
+              "diff": -0.7368771710418551,
+              "ci_lo": -0.8311385170666865,
+              "ci_hi": -0.6464063011395915,
+              "passed": true
+            },
+            "league!=FRA-Ligue 1": {
+              "n": 1592,
+              "diff": -0.698627765079779,
+              "ci_lo": -0.789169339082978,
+              "ci_hi": -0.6003115665701475,
+              "passed": true
+            },
+            "league!=GER-Bundesliga": {
+              "n": 1662,
+              "diff": -0.7344386501087606,
+              "ci_lo": -0.8246386927423773,
+              "ci_hi": -0.6412830903345981,
+              "passed": true
+            },
+            "league!=ITA-Serie A": {
+              "n": 1584,
+              "diff": -0.7440756079499803,
+              "ci_lo": -0.8358702921299982,
+              "ci_hi": -0.6482128976216786,
+              "passed": true
+            },
+            "pos!=DF": {
+              "n": 1338,
+              "diff": -0.9333926305392457,
+              "ci_lo": -1.0571581955950282,
+              "ci_hi": -0.8150368746327059,
+              "passed": true
+            },
+            "pos!=FW": {
+              "n": 1670,
+              "diff": -0.4714138391973515,
+              "ci_lo": -0.5225347302229644,
+              "ci_hi": -0.4194383648380571,
+              "passed": true
+            },
+            "pos!=GK": {
+              "n": 1866,
+              "diff": -0.7978554476306594,
+              "ci_lo": -0.8848589836221095,
+              "ci_hi": -0.7126295357025947,
+              "passed": true
+            },
+            "pos!=MF": {
+              "n": 1156,
+              "diff": -0.8194654161545933,
+              "ci_lo": -0.9515396395716664,
+              "ci_hi": -0.6961262941031345,
+              "passed": true
+            }
+          },
+          "passed": true
+        },
+        "verdict": "NOT PROVEN",
+        "passed": false
+      }
+    ],
+    "assists": [
+      {
+        "horizon": 1,
+        "metric": "assists",
+        "calibration": {
+          "nominal": 0.8,
+          "coverage": 0.9194029850746268,
+          "lo_bound": 0.72,
+          "hi_bound": 0.88,
+          "n": 2010,
+          "passed": false
+        },
+        "skill": {
+          "model_mae": 0.9893034825870647,
+          "baseline_maes": {
+            "persistence": 1.3417910447761194,
+            "cohort_mean": 1.4115734990952793
+          },
+          "best_baseline": "persistence",
+          "best_baseline_mae": 1.3417910447761194,
+          "diff": -0.35248756218905475,
+          "ci_lo": -0.41020522388059705,
+          "ci_hi": -0.29502487562189056,
+          "passed": true
+        },
+        "concentration": {
+          "groups": {
+            "league!=ENG-Premier League": {
+              "n": 1616,
+              "diff": -0.3468440594059406,
+              "ci_lo": -0.4127475247524752,
+              "ci_hi": -0.28032178217821785,
+              "passed": true
+            },
+            "league!=ESP-La Liga": {
+              "n": 1586,
+              "diff": -0.35182849936948296,
+              "ci_lo": -0.4136349306431274,
+              "ci_hi": -0.2849936948297604,
+              "passed": true
+            },
+            "league!=FRA-Ligue 1": {
+              "n": 1592,
+              "diff": -0.3501884422110553,
+              "ci_lo": -0.4139447236180904,
+              "ci_hi": -0.2867462311557789,
+              "passed": true
+            },
+            "league!=GER-Bundesliga": {
+              "n": 1662,
+              "diff": -0.34687123947051746,
+              "ci_lo": -0.4088522864019254,
+              "ci_hi": -0.28248345367027683,
+              "passed": true
+            },
+            "league!=ITA-Serie A": {
+              "n": 1584,
+              "diff": -0.36710858585858586,
+              "ci_lo": -0.43372790404040407,
+              "ci_hi": -0.2992345328282829,
+              "passed": true
+            },
+            "pos!=DF": {
+              "n": 1338,
+              "diff": -0.3807922272047833,
+              "ci_lo": -0.46039798206278026,
+              "ci_hi": -0.30006539611360245,
+              "passed": true
+            },
+            "pos!=FW": {
+              "n": 1670,
+              "diff": -0.3476047904191617,
+              "ci_lo": -0.40479790419161676,
+              "ci_hi": -0.29071107784431144,
+              "passed": true
+            },
+            "pos!=GK": {
+              "n": 1866,
+              "diff": -0.3759378349410504,
+              "ci_lo": -0.4389134512325831,
+              "ci_hi": -0.312433011789925,
+              "passed": true
+            },
+            "pos!=MF": {
+              "n": 1156,
+              "diff": -0.2889273356401384,
+              "ci_lo": -0.35813148788927335,
+              "ci_hi": -0.2179930795847751,
+              "passed": true
+            }
+          },
+          "passed": true
+        },
+        "verdict": "NOT PROVEN",
+        "passed": false
+      },
+      {
+        "horizon": 2,
+        "metric": "assists",
+        "calibration": {
+          "nominal": 0.8,
+          "coverage": 0.9174129353233831,
+          "lo_bound": 0.72,
+          "hi_bound": 0.88,
+          "n": 2010,
+          "passed": false
+        },
+        "skill": {
+          "model_mae": 0.9450248756218905,
+          "baseline_maes": {
+            "persistence": 1.472636815920398,
+            "cohort_mean": 1.4282118971655147
+          },
+          "best_baseline": "cohort_mean",
+          "best_baseline_mae": 1.4282118971655147,
+          "diff": -0.4831870215436243,
+          "ci_lo": -0.5358034920254618,
+          "ci_hi": -0.43176148169119305,
+          "passed": true
+        },
+        "concentration": {
+          "groups": {
+            "league!=ENG-Premier League": {
+              "n": 1616,
+              "diff": -0.49349724519190935,
+              "ci_lo": -0.5497922975924379,
+              "ci_hi": -0.43680287876720253,
+              "passed": true
+            },
+            "league!=ESP-La Liga": {
+              "n": 1586,
+              "diff": -0.4847763648398528,
+              "ci_lo": -0.5431139289887467,
+              "ci_hi": -0.4250101384742331,
+              "passed": true
+            },
+            "league!=FRA-Ligue 1": {
+              "n": 1592,
+              "diff": -0.4486846415630955,
+              "ci_lo": -0.5092944543076834,
+              "ci_hi": -0.3885811467894285,
+              "passed": true
+            },
+            "league!=GER-Bundesliga": {
+              "n": 1662,
+              "diff": -0.47433964799988626,
+              "ci_lo": -0.5304272056743516,
+              "ci_hi": -0.416683235452,
+              "passed": true
+            },
+            "league!=ITA-Serie A": {
+              "n": 1584,
+              "diff": -0.5150368345961792,
+              "ci_lo": -0.5730136681114997,
+              "ci_hi": -0.45475183568129895,
+              "passed": true
+            },
+            "pos!=DF": {
+              "n": 1338,
+              "diff": -0.5605321859238149,
+              "ci_lo": -0.6337427853156851,
+              "ci_hi": -0.48742797260859855,
+              "passed": true
+            },
+            "pos!=FW": {
+              "n": 1670,
+              "diff": -0.44513449530459714,
+              "ci_lo": -0.4975980513765791,
+              "ci_hi": -0.3928421501879234,
+              "passed": true
+            },
+            "pos!=GK": {
+              "n": 1866,
+              "diff": -0.5175508179898614,
+              "ci_lo": -0.572154171143949,
+              "ci_hi": -0.46399195635327767,
+              "passed": true
+            },
+            "pos!=MF": {
+              "n": 1156,
+              "diff": -0.3931671640261517,
+              "ci_lo": -0.4520526572408674,
+              "ci_hi": -0.3361230406264483,
+              "passed": true
+            }
+          },
+          "passed": true
+        },
+        "verdict": "NOT PROVEN",
+        "passed": false
+      },
+      {
+        "horizon": 3,
+        "metric": "assists",
+        "calibration": {
+          "nominal": 0.8,
+          "coverage": 0.8975124378109453,
+          "lo_bound": 0.72,
+          "hi_bound": 0.88,
+          "n": 2010,
+          "passed": false
+        },
+        "skill": {
+          "model_mae": 0.8641791044776119,
+          "baseline_maes": {
+            "persistence": 1.554726368159204,
+            "cohort_mean": 1.4513777354333437
+          },
+          "best_baseline": "cohort_mean",
+          "best_baseline_mae": 1.4513777354333437,
+          "diff": -0.5871986309557319,
+          "ci_lo": -0.6400733750674715,
+          "ci_hi": -0.531473902520793,
+          "passed": true
+        },
+        "concentration": {
+          "groups": {
+            "league!=ENG-Premier League": {
+              "n": 1616,
+              "diff": -0.6396049219334821,
+              "ci_lo": -0.6963858739863208,
+              "ci_hi": -0.5805000957842467,
+              "passed": true
+            },
+            "league!=ESP-La Liga": {
+              "n": 1586,
+              "diff": -0.5893969976742752,
+              "ci_lo": -0.6518338763038043,
+              "ci_hi": -0.5262261920878785,
+              "passed": true
+            },
+            "league!=FRA-Ligue 1": {
+              "n": 1592,
+              "diff": -0.5610332805822693,
+              "ci_lo": -0.6236184702162997,
+              "ci_hi": -0.49780663905454636,
+              "passed": true
+            },
+            "league!=GER-Bundesliga": {
+              "n": 1662,
+              "diff": -0.5666871933923776,
+              "ci_lo": -0.6277561765003897,
+              "ci_hi": -0.5057972473032499,
+              "passed": true
+            },
+            "league!=ITA-Serie A": {
+              "n": 1584,
+              "diff": -0.579351453676182,
+              "ci_lo": -0.6433063818562578,
+              "ci_hi": -0.5134196394816343,
+              "passed": true
+            },
+            "pos!=DF": {
+              "n": 1338,
+              "diff": -0.6667879685606882,
+              "ci_lo": -0.7418792488281022,
+              "ci_hi": -0.586792052507781,
+              "passed": true
+            },
+            "pos!=FW": {
+              "n": 1670,
+              "diff": -0.5223517883242461,
+              "ci_lo": -0.5767541842536329,
+              "ci_hi": -0.4651542587161599,
+              "passed": true
+            },
+            "pos!=GK": {
+              "n": 1866,
+              "diff": -0.6284301107644715,
+              "ci_lo": -0.6851459859098236,
+              "ci_hi": -0.5724050421819843,
+              "passed": true
+            },
+            "pos!=MF": {
+              "n": 1156,
+              "diff": -0.5222036068692626,
+              "ci_lo": -0.5833371238215289,
+              "ci_hi": -0.46220317734374816,
+              "passed": true
+            }
+          },
+          "passed": true
+        },
+        "verdict": "NOT PROVEN",
+        "passed": false
+      }
+    ]
+  }
+}

@@ -4,5 +4,7 @@ __pycache__/
 data/raw/
 results/*
 !results/.gitkeep
+!results/*.json
 charts/*
 !charts/.gitkeep
+!charts/*.png

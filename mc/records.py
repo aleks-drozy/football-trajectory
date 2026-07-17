@@ -55,6 +55,27 @@ RECORDS = (
         goals=260,
         source="https://en.wikipedia.org/wiki/List_of_footballers_with_100_or_more_Premier_League_goals",
     ),
+    Record(
+        name="Serie A all-time",
+        competition="ITA-Serie A",
+        holder="Silvio Piola",
+        goals=274,
+        source="https://en.wikipedia.org/wiki/Silvio_Piola",
+    ),
+    Record(
+        name="Bundesliga all-time",
+        competition="GER-Bundesliga",
+        holder="Gerd Müller",
+        goals=365,
+        source="https://en.wikipedia.org/wiki/List_of_Bundesliga_top_scorers",
+    ),
+    Record(
+        name="Ligue 1 all-time",
+        competition="FRA-Ligue 1",
+        holder="Delio Onnis",
+        goals=299,
+        source="https://en.wikipedia.org/wiki/List_of_Ligue_1_top_scorers",
+    ),
 )
 
 # Round-number milestones, useful when a player's league has no listed record

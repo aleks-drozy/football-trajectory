@@ -74,6 +74,16 @@ Quick look at Yamal specifically:
 | `validation/gate.py` | the verdict machinery. Tested against known-answer constructions |
 | `run_validate.py` | the three-way split and why the variant choice happens on an inner split |
 
+## The interactive explorer
+
+`viz/trajectory_explorer.html` — open in any browser, no server needed. 16
+young attackers, fan charts for goals/assists/minutes, a cumulative career
+view, and a **"what if he ages like…"** selector that grafts Messi's, Cristiano
+Ronaldo's or Benzema's real career arc onto the selected youngster (career view
+only; scenarios, not forecasts, and labelled as such). Built by
+`scripts/build_viz.py` from `viz/template.html` + the two results JSONs —
+edit the template, never the built file.
+
 ## Re-running anything
 
 ```bash
@@ -82,6 +92,9 @@ Quick look at Yamal specifically:
 .venv\Scripts\python run_project.py             # -> results/projections.json (needs a gate first)
 .venv\Scripts\python scripts\diagnose_calibration.py
 .venv\Scripts\python scripts\make_charts.py     # -> charts/*.png
+.venv\Scripts\python scripts\export_trajectories.py   # -> results/trajectories.json
+.venv\Scripts\python scripts\legend_scenarios.py      # -> results/legend_scenarios.json
+.venv\Scripts\python scripts\build_viz.py             # -> viz/trajectory_explorer.html
 ```
 
 Only `scripts/fetch_data.py` touches the network (headless Chrome, slow, FBref

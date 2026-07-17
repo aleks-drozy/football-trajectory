@@ -1,0 +1,758 @@
+<meta charset="utf-8">
+<title>Football Trajectory Explorer</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface:      #eef1f5;
+    --panel:        #ffffff;
+    --panel-2:      #f6f8fb;
+    --ink:          #10151c;
+    --ink-soft:     #56616f;
+    --ink-faint:    #8b95a3;
+    --hair:         #dde3ea;
+    --hair-strong:  #c4ccd6;
+    --goals:        #2a78d6;
+    --goals-band:   rgba(42,120,214,0.16);
+    --goals-band-2: rgba(42,120,214,0.28);
+    --assists:      #12946a;
+    --assists-band: rgba(18,148,106,0.16);
+    --assists-band-2: rgba(18,148,106,0.28);
+    --minutes:      #6a5acd;
+    --minutes-band: rgba(106,90,205,0.15);
+    --minutes-band-2: rgba(106,90,205,0.26);
+    --caution:      #b1770a;
+    --caution-bg:   #fbf3e1;
+    --caution-line: #e4b64b;
+    --shadow:       0 1px 2px rgba(16,21,28,0.05), 0 8px 24px rgba(16,21,28,0.06);
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface:      #0e1116;
+      --panel:        #171b22;
+      --panel-2:      #1d222b;
+      --ink:          #e9edf3;
+      --ink-soft:     #9aa5b3;
+      --ink-faint:    #6b7684;
+      --hair:         #262c36;
+      --hair-strong:  #333b47;
+      --goals:        #4a94ef;
+      --goals-band:   rgba(74,148,239,0.17);
+      --goals-band-2: rgba(74,148,239,0.30);
+      --assists:      #23b483;
+      --assists-band: rgba(35,180,131,0.16);
+      --assists-band-2: rgba(35,180,131,0.30);
+      --minutes:      #9085e9;
+      --minutes-band: rgba(144,133,233,0.16);
+      --minutes-band-2: rgba(144,133,233,0.28);
+      --caution:      #e6b24d;
+      --caution-bg:   #2a2213;
+      --caution-line: #6b551f;
+      --shadow:       0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface:#0e1116; --panel:#171b22; --panel-2:#1d222b;
+    --ink:#e9edf3; --ink-soft:#9aa5b3; --ink-faint:#6b7684;
+    --hair:#262c36; --hair-strong:#333b47;
+    --goals:#4a94ef; --goals-band:rgba(74,148,239,0.17); --goals-band-2:rgba(74,148,239,0.30);
+    --assists:#23b483; --assists-band:rgba(35,180,131,0.16); --assists-band-2:rgba(35,180,131,0.30);
+    --minutes:#9085e9; --minutes-band:rgba(144,133,233,0.16); --minutes-band-2:rgba(144,133,233,0.28);
+    --caution:#e6b24d; --caution-bg:#2a2213; --caution-line:#6b551f;
+    --shadow:0 1px 2px rgba(0,0,0,0.3), 0 10px 30px rgba(0,0,0,0.35);
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--surface); color: var(--ink);
+    font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 24px 72px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  /* Masthead */
+  header.masthead { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+  .masthead h1 {
+    font-size: clamp(26px, 4vw, 40px); line-height: 1.05; margin: 6px 0 0;
+    letter-spacing: -0.02em; font-weight: 800; text-wrap: balance; max-width: 18ch;
+  }
+  .masthead .sub { color: var(--ink-soft); margin: 10px 0 0; max-width: 56ch; font-size: 15px; }
+  .theme-toggle {
+    flex: none; font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em;
+    background: var(--panel); color: var(--ink-soft); border: 1px solid var(--hair-strong);
+    border-radius: 999px; padding: 8px 14px; cursor: pointer;
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  /* Verdict banner */
+  .verdict {
+    margin-top: 22px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center;
+    background: var(--caution-bg); border: 1px solid var(--caution-line);
+    border-left: 4px solid var(--caution); border-radius: 12px; padding: 14px 18px;
+  }
+  .verdict .flag {
+    font-family: var(--mono); font-weight: 700; font-size: 12px; letter-spacing: 0.08em;
+    color: var(--caution); white-space: nowrap; display: flex; align-items: center; gap: 8px;
+  }
+  .verdict .flag svg { width: 16px; height: 16px; }
+  .verdict p { margin: 0; font-size: 13.5px; color: var(--ink-soft); }
+  .verdict p b { color: var(--ink); font-weight: 600; }
+
+  /* Controls */
+  .controls { margin-top: 26px; display: flex; flex-direction: column; gap: 14px; }
+  .players { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    font-family: var(--sans); font-size: 13px; font-weight: 500;
+    background: var(--panel); color: var(--ink-soft); border: 1px solid var(--hair-strong);
+    border-radius: 999px; padding: 7px 13px; cursor: pointer; transition: none;
+    display: inline-flex; align-items: baseline; gap: 7px;
+  }
+  .pill:hover { border-color: var(--ink-faint); color: var(--ink); }
+  .pill[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .pill .age { font-family: var(--mono); font-size: 11px; opacity: 0.7; }
+  .segmented { display: inline-flex; background: var(--panel-2); border: 1px solid var(--hair-strong); border-radius: 10px; padding: 3px; gap: 3px; }
+  .segmented button {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase;
+    background: transparent; color: var(--ink-soft); border: 0; border-radius: 7px; padding: 7px 12px; cursor: pointer;
+  }
+  .segmented button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .toolbar .label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); }
+
+  /* Chart panel */
+  .chart-card { margin-top: 18px; background: var(--panel); border: 1px solid var(--hair); border-radius: 16px; box-shadow: var(--shadow); padding: 22px 22px 12px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .chart-head h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .chart-head .who { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .chart-svg-holder { position: relative; margin-top: 8px; }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px 22px; margin-top: 6px; padding: 0 2px 8px; }
+  .legend .item { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-soft); }
+  .legend .swatch { width: 22px; height: 12px; border-radius: 3px; flex: none; }
+  .legend .swatch.line { height: 0; border-top: 2px solid var(--ink); width: 20px; }
+  .legend .swatch.dash { height: 0; border-top: 2px dashed currentColor; width: 20px; }
+
+  /* Tooltip */
+  .tip {
+    position: absolute; pointer-events: none; opacity: 0; transform: translate(-50%, -108%);
+    background: var(--panel); border: 1px solid var(--hair-strong); border-radius: 10px;
+    box-shadow: var(--shadow); padding: 9px 11px; font-size: 12px; min-width: 132px; z-index: 5;
+  }
+  .tip .tip-age { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+  .tip .row { display: flex; justify-content: space-between; gap: 14px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .tip .row .k { color: var(--ink-soft); } .tip .row .v { font-family: var(--mono); color: var(--ink); }
+
+  /* Readout grid */
+  .grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; margin-top: 18px; }
+  @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--hair); border-radius: 16px; box-shadow: var(--shadow); padding: 20px 22px; }
+  .card h3 { margin: 0 0 2px; font-size: 15px; font-weight: 700; }
+  .card .card-sub { color: var(--ink-faint); font-size: 12.5px; margin-bottom: 16px; }
+
+  .bignum { display: flex; align-items: baseline; gap: 12px; margin: 4px 0 2px; }
+  .bignum .n { font-family: var(--mono); font-size: 46px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+  .bignum .u { color: var(--ink-soft); font-size: 13px; max-width: 16ch; }
+  .rangebar { margin: 14px 0 4px; }
+  .rangebar .track { position: relative; height: 8px; background: var(--panel-2); border: 1px solid var(--hair); border-radius: 6px; }
+  .rangebar .fill { position: absolute; top: -1px; bottom: -1px; background: var(--goals-band-2); border-radius: 6px; }
+  .rangebar .med { position: absolute; top: -3px; width: 3px; height: 14px; background: var(--goals); border-radius: 2px; }
+  .rangebar .ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--ink-faint); margin-top: 7px; font-variant-numeric: tabular-nums; }
+
+  .milestones { margin-top: 6px; display: flex; flex-direction: column; gap: 9px; }
+  .ms { display: grid; grid-template-columns: 92px 1fr 46px; gap: 12px; align-items: center; }
+  .ms .ms-k { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .ms .ms-bar { height: 9px; background: var(--panel-2); border: 1px solid var(--hair); border-radius: 6px; overflow: hidden; }
+  .ms .ms-bar > i { display: block; height: 100%; background: var(--goals); border-radius: 6px; }
+  .ms .ms-v { font-family: var(--mono); font-size: 12.5px; text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .record-line { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hair); display: flex; align-items: center; gap: 12px; }
+  .record-line .rl-p { font-family: var(--mono); font-weight: 700; font-size: 22px; color: var(--caution); font-variant-numeric: tabular-nums; }
+  .record-line .rl-t { font-size: 13px; color: var(--ink-soft); }
+  .record-line .rl-t b { color: var(--ink); font-weight: 600; }
+
+  .note { font-size: 13px; color: var(--ink-soft); }
+  .note b { color: var(--ink); font-weight: 600; }
+  .note ul { margin: 10px 0 0; padding-left: 18px; }
+  .note li { margin: 6px 0; }
+
+  /* Comparison strip */
+  .compare { margin-top: 18px; }
+  .compare svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+  /* Footer */
+  footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--hair); color: var(--ink-soft); font-size: 12.5px; }
+  footer .gate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0 4px; }
+  @media (max-width: 620px) { footer .gate-grid { grid-template-columns: 1fr; } }
+  footer .gate { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px; padding: 13px 15px; }
+  footer .gate .gtag { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; }
+  footer .gate .gtag.clean { color: var(--assists); } footer .gate .gtag.second { color: var(--caution); }
+  footer .gate .gbody { margin-top: 6px; color: var(--ink); font-size: 13px; }
+  footer .gate .gbody b { font-family: var(--mono); }
+  footer .meta { margin-top: 8px; }
+  footer a { color: var(--goals); text-decoration: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fade-swap { animation: fade 0.28s ease; }
+    @keyframes fade { from { opacity: 0.35; } to { opacity: 1; } }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">Big-5 European leagues · Monte-Carlo projection</div>
+      <h1>How far can a teenager go?</h1>
+      <p class="sub">A career-trajectory model for young footballers, trained on 24,057 player-seasons.
+        Pick a player to see the projected fan of goals, assists and minutes from now to a notional
+        age 38 — and, honestly, how much you should trust it.</p>
+    </div>
+    <button class="theme-toggle" id="themeBtn" aria-label="Toggle colour theme">◐ Theme</button>
+  </header>
+
+  <div class="verdict" role="note">
+    <div class="flag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      NOT&nbsp;TRUSTWORTHY
+    </div>
+    <p id="verdictText"></p>
+  </div>
+
+  <div class="controls">
+    <div class="players" id="players" role="group" aria-label="Choose a player"></div>
+    <div class="toolbar">
+      <span class="label">View</span>
+      <div class="segmented" id="viewSeg" role="group" aria-label="Chart view">
+        <button data-view="season" aria-pressed="true">Season by season</button>
+        <button data-view="career" aria-pressed="false">Career goals</button>
+      </div>
+      <span class="label" id="metricLabel">Metric</span>
+      <div class="segmented" id="metricSeg" role="group" aria-label="Metric">
+        <button data-metric="goals" aria-pressed="true">Goals</button>
+        <button data-metric="assists" aria-pressed="false">Assists</button>
+        <button data-metric="minutes" aria-pressed="false">Minutes</button>
+      </div>
+      <span class="label" id="arcLabel" style="display:none">What if he were…</span>
+      <div class="segmented" id="arcSeg" role="group" aria-label="Legend arc scenario" style="display:none"></div>
+      <div class="segmented" id="modeSeg" role="group" aria-label="Scenario mode" style="display:none">
+        <button data-mode="at_rate" aria-pressed="true">At his rate</button>
+        <button data-mode="improving_like" aria-pressed="false">Improving like him</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-head">
+      <h2 id="chartTitle">Non-penalty goals per season</h2>
+      <div class="who" id="chartWho"></div>
+    </div>
+    <div class="chart-svg-holder">
+      <svg class="chart" id="fan" viewBox="0 0 900 420" role="img" aria-label="Projection fan chart"></svg>
+      <div class="tip" id="tip"></div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card" id="readoutCard">
+      <h3 id="roTitle">Career outlook</h3>
+      <div class="card-sub" id="roSub"></div>
+      <div class="bignum"><span class="n" id="roBig">—</span><span class="u" id="roBigU"></span></div>
+      <div class="rangebar">
+        <div class="track"><div class="fill" id="roFill"></div><div class="med" id="roMed"></div></div>
+        <div class="ticks"><span id="roLo">—</span><span>projected range · 10th – 90th percentile</span><span id="roHi">—</span></div>
+      </div>
+      <div class="milestones" id="milestones"></div>
+      <div class="record-line" id="recordLine"></div>
+    </div>
+
+    <div class="card">
+      <h3>How to read this</h3>
+      <div class="card-sub">The chart is honest about its own limits.</div>
+      <div class="note">
+        <ul>
+          <li><b>Solid line</b> is what actually happened — the player's real seasons so far.</li>
+          <li>The <b>fan</b> is 6,000 simulated futures. The dashed line is the median; the two
+            shaded bands are the middle <b>50%</b> and <b>80%</b> of outcomes.</li>
+          <li>The fan is pinched at <b>“now”</b> and widens — uncertainty compounds the further out
+            you look.</li>
+          <li><b>Trust the dashed line more than the bands.</b> The model's point projections beat
+            every simple baseline and hold up on data it never saw. Its error bars are honestly too
+            wide — so read the fan as “roughly this shape”, not as odds.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card compare">
+    <div class="chart-head">
+      <h2>Every prospect, ranked</h2>
+      <div class="who">projected remaining Big-5 non-penalty goals · dot = median, bar = 10th–90th</div>
+    </div>
+    <svg id="compareChart" role="img" aria-label="Comparison of projected career goals across players"></svg>
+  </div>
+
+  <footer>
+    <div class="eyebrow">The honest verdict</div>
+    <div class="gate-grid">
+      <div class="gate">
+        <div class="gtag clean" id="gCleanTag">Clean test · 2025-26</div>
+        <div class="gbody" id="gCleanBody"></div>
+      </div>
+      <div class="gate">
+        <div class="gtag second" id="gSecondTag">Second look · 2022-24</div>
+        <div class="gbody" id="gSecondBody"></div>
+      </div>
+    </div>
+    <p class="meta" id="footMeta"></p>
+  </footer>
+</div>
+
+<script id="legends" type="application/json">__LEGENDS__</script>
+<script id="data" type="application/json">__TRAJECTORIES__</script>
+<script>
+(() => {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("data").textContent);
+  const LEGENDS = JSON.parse(document.getElementById("legends").textContent);
+  const LEGEND_NAMES = Object.keys(LEGENDS.legends);
+  const shortName = n => n.split(" ").slice(-1)[0];
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (t, a = {}) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const byId = id => document.getElementById(id);
+  const fmt = n => (Math.round(n)).toLocaleString("en-US");
+  const pct = p => (p >= 0.10 ? Math.round(p * 100) + "%" : (p * 100).toFixed(1).replace(/\.0$/, "") + "%");
+
+  const METRIC = {
+    goals:   { key: "npg",     obs: "npg",     color: "goals",   band: "--goals-band", band2: "--goals-band-2", label: "Non-penalty goals", short: "npG" },
+    assists: { key: "assists", obs: "assists", color: "assists", band: "--assists-band", band2: "--assists-band-2", label: "Assists", short: "assists" },
+    minutes: { key: "minutes", obs: "minutes", color: "minutes", band: "--minutes-band", band2: "--minutes-band-2", label: "Minutes", short: "minutes" },
+  };
+
+  const state = { player: DATA.players[0], view: "season", metric: "goals",
+                  legend: LEGEND_NAMES[0] || null, mode: "at_rate" };
+  const pairFor = (p, legend) =>
+    (legend && LEGENDS.players[p.player] && LEGENDS.players[p.player].scenarios[legend]) || null;
+  // A mode can be legitimately unavailable for a pair (the growth factor may be
+  // untransplantable — see scripts/legend_scenarios.py); fall back rather than
+  // draw nothing.
+  const scenarioFor = (p, legend, mode) => {
+    const pair = pairFor(p, legend);
+    if (!pair) return null;
+    return pair[mode] || null;
+  };
+  const activeScenario = p => scenarioFor(p, state.legend, state.mode)
+    || scenarioFor(p, state.legend, "at_rate");
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  // ---- verdict + footer (static text from data) ----
+  byId("verdictText").innerHTML = DATA.verdict.headline
+    .replace("under-confident", "<b>under-confident</b>")
+    .replace("useful", "<b>useful</b>");
+  const gc = DATA.verdict.gate_2025_fresh, gs = DATA.verdict.gate_2022_2024;
+  byId("gCleanBody").innerHTML =
+    `Goals, +1 season: model error <b>${gc.goals_plus1_mae.toFixed(2)}</b> vs baseline <b>${gc.goals_plus1_baseline.toFixed(2)}</b>. ` +
+    `The skill replicates on a season never used before. Intervals still too wide (${Math.round(gc.goals_plus1_calibration*100)}% inside the 80% band).`;
+  byId("gSecondBody").innerHTML =
+    `Goals, +3 seasons: model error <b>${gs.goals_plus3_mae.toFixed(2)}</b> vs baseline <b>${gs.goals_plus3_baseline.toFixed(2)}</b> — ` +
+    `the edge grows the further out you project.`;
+  byId("footMeta").innerHTML =
+    `Model ${DATA.model_version} · ${fmt(DATA.n_sims)} simulations per player · projected to age ${DATA.retirement_age}. ` +
+    `Shrinkage constant K = 110 — a player needs about 3.5 full seasons before his own record outweighs the crowd. ` +
+    `Big-5 domestic leagues only; a move abroad reads as leaving the data, not retiring. Records count penalties, so career totals include them.`;
+
+  // ---- player pills ----
+  const playersEl = byId("players");
+  DATA.players.forEach((p, i) => {
+    const b = document.createElement("button");
+    b.className = "pill"; b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    b.innerHTML = `${p.player} <span class="age">${p.age}</span>`;
+    b.addEventListener("click", () => { state.player = p; syncPills(); render(); });
+    playersEl.appendChild(b);
+  });
+  function syncPills() {
+    [...playersEl.children].forEach((b, i) => b.setAttribute("aria-pressed", DATA.players[i] === state.player ? "true" : "false"));
+  }
+
+  // ---- segmented controls ----
+  byId("viewSeg").addEventListener("click", e => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    state.view = btn.dataset.view;
+    [...byId("viewSeg").children].forEach(b => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+    const metricDisabled = state.view === "career";
+    byId("metricSeg").style.opacity = metricDisabled ? 0.4 : 1;
+    byId("metricSeg").style.pointerEvents = metricDisabled ? "none" : "auto";
+    byId("metricLabel").style.opacity = metricDisabled ? 0.4 : 1;
+    render();
+  });
+  byId("metricSeg").addEventListener("click", e => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    state.metric = btn.dataset.metric;
+    [...byId("metricSeg").children].forEach(b => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+    render();
+  });
+
+  // Arc selector: which legend's career shape to graft on (career view only).
+  function buildArcSeg() {
+    const seg = byId("arcSeg"); seg.innerHTML = "";
+    const none = document.createElement("button");
+    none.textContent = "None"; none.dataset.legend = "";
+    seg.appendChild(none);
+    LEGEND_NAMES.forEach(n => {
+      const b = document.createElement("button");
+      b.textContent = shortName(n); b.dataset.legend = n;
+      seg.appendChild(b);
+    });
+    seg.addEventListener("click", e => {
+      const btn = e.target.closest("button"); if (!btn || btn.disabled) return;
+      state.legend = btn.dataset.legend || null;
+      render();
+    });
+  }
+  buildArcSeg();
+  byId("modeSeg").addEventListener("click", e => {
+    const btn = e.target.closest("button"); if (!btn || btn.disabled) return;
+    state.mode = btn.dataset.mode;
+    render();
+  });
+  function syncArcSeg() {
+    const careers = state.view === "career";
+    byId("arcSeg").style.display = careers ? "inline-flex" : "none";
+    byId("arcLabel").style.display = careers ? "inline" : "none";
+    [...byId("arcSeg").children].forEach(b => {
+      const name = b.dataset.legend;
+      const available = !name || !!pairFor(state.player, name);
+      b.disabled = !available;
+      b.style.opacity = available ? 1 : 0.35;
+      b.setAttribute("aria-pressed", (state.legend || "") === name ? "true" : "false");
+    });
+    // The mode switch only exists once an arc is chosen, and each mode is
+    // offered only where the scenario is defensible for this exact pair.
+    const showModes = careers && !!state.legend;
+    byId("modeSeg").style.display = showModes ? "inline-flex" : "none";
+    if (!showModes) return;
+    [...byId("modeSeg").children].forEach(b => {
+      const has = !!scenarioFor(state.player, state.legend, b.dataset.mode);
+      b.disabled = !has;
+      b.style.opacity = has ? 1 : 0.35;
+      b.title = has ? "" : (pairFor(state.player, state.legend) || {}).improving_like_reason || "";
+      b.setAttribute("aria-pressed", state.mode === b.dataset.mode && has ? "true" : "false");
+    });
+  }
+
+  // ---- theme ----
+  byId("themeBtn").addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const dark = cur ? cur === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+    render();
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+
+  // ---- geometry helpers ----
+  const niceMax = v => { if (v <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(v))); const f = v / p; const s = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10; return s * p; };
+
+  function buildSeries() {
+    // Returns { obs:[{x,y}], anchor:{x,y}, futAges:[], bands:{p10,p25,p50,p75,p90}, yMax, yLabel, color, bandC, band2C }
+    const p = state.player;
+    if (state.view === "career") {
+      // cumulative TOTAL goals: observed cumsum of goals -> anchor at goals_so_far
+      let run = 0; const obs = p.observed.map(o => { run += o.goals; return { x: o.age, y: run }; });
+      const anchorY = p.goals_so_far != null ? p.goals_so_far : run;
+      const b = p.bands.cumulative_goals;
+      const scenario = activeScenario(p);
+      const record = LEGENDS.records[p.league] || null;
+      // The record line is the scenario's yardstick; with no arc selected the
+      // chart stays a pure fan and the record does not distort the scale.
+      const extras = scenario ? [scenario.career_total, ...(record ? [record.goals] : [])] : [];
+      const yMax = niceMax(Math.max(...b.p90, ...extras) * 1.05);
+      return { obs, anchor: { x: p.age, y: anchorY }, futAges: p.future_ages, bands: b, yMax,
+               yLabel: "cumulative career goals", color: cssVar("--goals"),
+               bandC: cssVar("--goals-band"), band2C: cssVar("--goals-band-2"), integer: true,
+               scenario, record };
+    }
+    const m = METRIC[state.metric];
+    const obs = p.observed.map(o => ({ x: o.age, y: o[m.obs] }));
+    const b = p.bands[m.key];
+    const anchorY = obs.length ? obs[obs.length - 1].y : b.p50[0];
+    const rawMax = Math.max(...b.p90, ...obs.map(o => o.y));
+    const yMax = state.metric === "minutes" ? niceMax(rawMax * 1.05) : niceMax(Math.max(rawMax, 4) * 1.08);
+    return { obs, anchor: { x: p.age, y: anchorY }, futAges: p.future_ages, bands: b, yMax,
+             yLabel: m.label.toLowerCase() + " per season", color: cssVar(`--${m.color}`),
+             bandC: cssVar(m.band), band2C: cssVar(m.band2), integer: state.metric !== "minutes" };
+  }
+
+  // ---- draw fan chart ----
+  const tip = byId("tip");
+  function drawFan() {
+    const svg = byId("fan");
+    svg.innerHTML = "";
+    const W = 900, H = 420, m = { t: 16, r: 18, b: 40, l: 52 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const s = buildSeries();
+    const p = state.player;
+    const xMin = p.observed.length ? p.observed[0].age : p.age;
+    const xMax = DATA.retirement_age;
+    const X = a => m.l + (a - xMin) / (xMax - xMin) * iw;
+    const Y = v => m.t + ih - (v / s.yMax) * ih;
+    const ink = cssVar("--ink"), soft = cssVar("--ink-soft"), faint = cssVar("--ink-faint"), hair = cssVar("--hair"), hairS = cssVar("--hair-strong");
+
+    // grid + y ticks
+    const yticks = 5;
+    for (let i = 0; i <= yticks; i++) {
+      const v = s.yMax * i / yticks, y = Y(v);
+      svg.appendChild(el("line", { x1: m.l, y1: y, x2: W - m.r, y2: y, stroke: hair, "stroke-width": 1 }));
+      const t = el("text", { x: m.l - 9, y: y + 4, "text-anchor": "end", fill: faint });
+      t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "11"); t.textContent = fmt(v);
+      svg.appendChild(t);
+    }
+    // x ticks every ~4 yrs
+    for (let a = Math.ceil(xMin / 2) * 2; a <= xMax; a += (xMax - xMin > 14 ? 4 : 2)) {
+      const x = X(a);
+      const t = el("text", { x, y: H - m.b + 20, "text-anchor": "middle", fill: faint });
+      t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "11"); t.textContent = a;
+      svg.appendChild(t);
+    }
+    { const t = el("text", { x: m.l, y: H - 6, "text-anchor": "start", fill: faint });
+      t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "10.5"); t.setAttribute("letter-spacing", "0.08em");
+      t.textContent = "AGE →"; svg.appendChild(t); }
+
+    // build fan band paths (anchor pinned at now, then future ages)
+    const fx = [s.anchor.x, ...s.futAges];
+    const area = (lo, hi) => {
+      const loArr = [s.anchor.y, ...lo], hiArr = [s.anchor.y, ...hi];
+      let d = `M ${X(fx[0])} ${Y(loArr[0])}`;
+      for (let i = 1; i < fx.length; i++) d += ` L ${X(fx[i])} ${Y(loArr[i])}`;
+      for (let i = fx.length - 1; i >= 0; i--) d += ` L ${X(fx[i])} ${Y(hiArr[i])}`;
+      return d + " Z";
+    };
+    svg.appendChild(el("path", { d: area(s.bands.p10, s.bands.p90), fill: s.bandC, stroke: "none" }));
+    svg.appendChild(el("path", { d: area(s.bands.p25, s.bands.p75), fill: s.band2C, stroke: "none" }));
+
+    // median dashed
+    { let d = `M ${X(s.anchor.x)} ${Y(s.anchor.y)}`;
+      s.futAges.forEach((a, i) => d += ` L ${X(a)} ${Y(s.bands.p50[i])}`);
+      svg.appendChild(el("path", { d, fill: "none", stroke: s.color, "stroke-width": 2.4, "stroke-dasharray": "1 6", "stroke-linecap": "round" })); }
+
+    // "now" marker line
+    const nowX = X(s.anchor.x);
+    svg.appendChild(el("line", { x1: nowX, y1: m.t, x2: nowX, y2: m.t + ih, stroke: hairS, "stroke-width": 1, "stroke-dasharray": "3 4" }));
+    { const t = el("text", { x: nowX + 6, y: m.t + 12, fill: faint });
+      t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "10.5"); t.setAttribute("letter-spacing", "0.06em");
+      t.textContent = "NOW"; svg.appendChild(t); }
+
+    // Legend-arc scenario overlay (career view) — a conditional "what if",
+    // drawn in the caution colour so it never reads as a forecast.
+    if (s.scenario) {
+      const caution = cssVar("--caution");
+      if (s.record) {
+        const ry = Y(s.record.goals);
+        svg.appendChild(el("line", { x1: m.l, y1: ry, x2: W - m.r, y2: ry, stroke: caution, "stroke-width": 1, "stroke-dasharray": "6 5", opacity: 0.55 }));
+        const t = el("text", { x: W - m.r, y: ry - 6, "text-anchor": "end", fill: caution });
+        t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "11");
+        t.textContent = `${s.record.holder.toUpperCase()} RECORD · ${s.record.goals}`; svg.appendChild(t);
+      }
+      let d = `M ${X(s.anchor.x)} ${Y(state.player.goals_so_far || 0)}`;
+      s.scenario.path.forEach(pt => { if (pt.age <= xMax) d += ` L ${X(pt.age)} ${Y(pt.cumulative)}`; });
+      svg.appendChild(el("path", { d, fill: "none", stroke: caution, "stroke-width": 2, "stroke-dasharray": "7 4", "stroke-linecap": "round" }));
+      const visible = s.scenario.path.filter(pt => pt.age <= xMax);
+      const last = visible[visible.length - 1];
+      if (last) {
+        svg.appendChild(el("circle", { cx: X(last.age), cy: Y(last.cumulative), r: 4, fill: caution, stroke: cssVar("--panel"), "stroke-width": 2 }));
+        const t = el("text", { x: X(last.age) - 8, y: Y(last.cumulative) - 10, "text-anchor": "end", fill: caution });
+        t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "11.5"); t.setAttribute("font-weight", "700");
+        t.textContent = `${shortName(state.legend)} → ${fmt(last.cumulative)}`; svg.appendChild(t);
+      }
+    }
+
+    // observed solid line
+    if (s.obs.length) {
+      let d = `M ${X(s.obs[0].x)} ${Y(s.obs[0].y)}`;
+      s.obs.slice(1).forEach(o => d += ` L ${X(o.x)} ${Y(o.y)}`);
+      svg.appendChild(el("path", { d, fill: "none", stroke: ink, "stroke-width": 2.4, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      s.obs.forEach(o => svg.appendChild(el("circle", { cx: X(o.x), cy: Y(o.y), r: 3, fill: cssVar("--panel"), stroke: ink, "stroke-width": 2 })));
+    }
+
+    // y-axis title
+    { const t = el("text", { x: -(m.t + ih / 2), y: 14, "text-anchor": "middle", fill: faint, transform: "rotate(-90)" });
+      t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "10.5"); t.setAttribute("letter-spacing", "0.06em");
+      t.textContent = s.yLabel.toUpperCase(); svg.appendChild(t); }
+
+    // hover
+    const hover = el("line", { x1: 0, y1: m.t, x2: 0, y2: m.t + ih, stroke: s.color, "stroke-width": 1, opacity: 0 });
+    svg.appendChild(hover);
+    const hoverDot = el("circle", { r: 4, fill: s.color, stroke: cssVar("--panel"), "stroke-width": 2, opacity: 0 });
+    svg.appendChild(hoverDot);
+    const rect = el("rect", { x: m.l, y: m.t, width: iw, height: ih, fill: "transparent" });
+    svg.appendChild(rect);
+    const allAges = fx;
+    rect.addEventListener("mousemove", ev => {
+      const pt = svg.getBoundingClientRect();
+      const scaleX = W / pt.width;
+      const mx = (ev.clientX - pt.left) * scaleX;
+      const age = xMin + (mx - m.l) / iw * (xMax - xMin);
+      // nearest future age (bands only exist there); clamp to anchor
+      let bestI = 0, bestD = 1e9;
+      allAges.forEach((a, i) => { const dd = Math.abs(a - age); if (dd < bestD) { bestD = dd; bestI = i; } });
+      const a = allAges[bestI];
+      const isAnchor = bestI === 0;
+      const p50 = isAnchor ? s.anchor.y : s.bands.p50[bestI - 1];
+      const p10 = isAnchor ? s.anchor.y : s.bands.p10[bestI - 1];
+      const p90 = isAnchor ? s.anchor.y : s.bands.p90[bestI - 1];
+      const hx = X(a);
+      hover.setAttribute("x1", hx); hover.setAttribute("x2", hx); hover.setAttribute("opacity", 0.5);
+      hoverDot.setAttribute("cx", hx); hoverDot.setAttribute("cy", Y(p50)); hoverDot.setAttribute("opacity", 1);
+      const unit = s.integer ? "" : "";
+      tip.style.opacity = 1;
+      tip.style.left = (hx / W * 100) + "%";
+      tip.style.top = (Y(p90) / H * 100) + "%";
+      tip.innerHTML =
+        `<div class="tip-age">age ${a}${isAnchor ? " · now" : ""}</div>` +
+        `<div class="row"><span class="k">median</span><span class="v">${fmt(p50)}</span></div>` +
+        (isAnchor ? "" :
+        `<div class="row"><span class="k">80% range</span><span class="v">${fmt(p10)}–${fmt(p90)}</span></div>`);
+    });
+    rect.addEventListener("mouseleave", () => { tip.style.opacity = 0; hover.setAttribute("opacity", 0); hoverDot.setAttribute("opacity", 0); });
+  }
+
+  // ---- legend ----
+  function drawLegend() {
+    const L = byId("legend"); L.innerHTML = "";
+    const s = buildSeries();
+    const items = [
+      { html: `<span class="swatch line"></span>`, txt: "Actual so far" },
+      { html: `<span class="swatch dash" style="color:${s.color}"></span>`, txt: "Projected median" },
+      { html: `<span class="swatch" style="background:${s.band2C}"></span>`, txt: "Middle 50%" },
+      { html: `<span class="swatch" style="background:${s.bandC}"></span>`, txt: "Middle 80%" },
+    ];
+    if (s.scenario) {
+      const mode = scenarioFor(state.player, state.legend, state.mode) ? state.mode : "at_rate";
+      const txt = mode === "at_rate"
+        ? `If he scored at ${shortName(state.legend)}'s rate — scenario, not a forecast`
+        : `If he improved like ${shortName(state.legend)} — scenario, not a forecast`;
+      items.push({ html: `<span class="swatch dash" style="color:${cssVar("--caution")}"></span>`, txt });
+    }
+    items.forEach(it => {
+      const d = document.createElement("div"); d.className = "item";
+      d.innerHTML = it.html + `<span>${it.txt}</span>`; L.appendChild(d);
+    });
+  }
+
+  // ---- readout card ----
+  function drawReadout() {
+    const p = state.player;
+    const ct = p.career_total_goals;
+    const fnpg = p.totals.future_npg, fast = p.totals.future_assists;
+    byId("roTitle").textContent = "Career outlook";
+    byId("roSub").textContent = `${p.player} · ${p.team} · from age ${p.age}`;
+
+    if (state.view === "career" && ct) {
+      byId("roBig").textContent = fmt(ct.median);
+      byId("roBigU").innerHTML = `career league goals<br>incl. ${p.goals_so_far} already scored`;
+      setRange(ct.p10, ct.median, ct.p90);
+      drawMilestones(ct.milestones);
+      const rec = Object.entries(ct.records).find(([, r]) => r.same_competition_as_player) || Object.entries(ct.records)[0];
+      const [rname, rr] = rec;
+      const sc = activeScenario(p);
+      const usedMode = scenarioFor(p, state.legend, state.mode) ? state.mode : "at_rate";
+      const verb = usedMode === "at_rate" ? "scored at" : "improved like";
+      const suffix = usedMode === "at_rate" ? "'s rate" : "";
+      const messiLine = sc
+        ? `<br><span style="color:var(--caution)">If he ${verb} ${shortName(state.legend)}${suffix}: <b style="font-family:var(--mono)">${fmt(sc.career_total)}</b>${
+            sc.record && sc.record.beats ? ` — record broken at ${sc.record.broken_at_age}` : sc.record ? " — record survives" : ""
+          }. A scenario, not a forecast.</span>`
+        : "";
+      byId("recordLine").innerHTML =
+        `<span class="rl-p">${pct(rr.probability)}</span>` +
+        `<span class="rl-t">chance of beating the <b>${rr.holder}</b> ${rname.replace(" all-time","")} record of <b>${rr.goals}</b>${messiLine}</span>`;
+      byId("recordLine").style.display = "flex";
+    } else {
+      byId("roBig").textContent = fmt(fnpg.median);
+      byId("roBigU").innerHTML = `more non-penalty goals<br>over the rest of his career`;
+      setRange(fnpg.p10, fnpg.median, fnpg.p90);
+      drawMilestones(ct ? ct.milestones : {});
+      if (ct) {
+        const rec = Object.entries(ct.records).find(([, r]) => r.same_competition_as_player) || Object.entries(ct.records)[0];
+        const [rname, rr] = rec;
+        byId("recordLine").innerHTML =
+          `<span class="rl-p">${pct(rr.probability)}</span>` +
+          `<span class="rl-t">chance of beating the <b>${rr.holder}</b> ${rname.replace(" all-time","")} record of <b>${rr.goals}</b></span>`;
+        byId("recordLine").style.display = "flex";
+      } else byId("recordLine").style.display = "none";
+    }
+  }
+  function setRange(lo, med, hi) {
+    const max = hi * 1.08;
+    byId("roFill").style.left = (lo / max * 100) + "%";
+    byId("roFill").style.width = ((hi - lo) / max * 100) + "%";
+    byId("roMed").style.left = (med / max * 100) + "%";
+    byId("roLo").textContent = fmt(lo); byId("roHi").textContent = fmt(hi);
+  }
+  function drawMilestones(ms) {
+    const box = byId("milestones"); box.innerHTML = "";
+    const keys = ["50", "100", "150", "200"];
+    keys.forEach(k => {
+      if (ms[k] == null) return;
+      const row = document.createElement("div"); row.className = "ms";
+      row.innerHTML = `<span class="ms-k">${k}+ goals</span><span class="ms-bar"><i style="width:${Math.max(ms[k]*100,0.5)}%"></i></span><span class="ms-v">${pct(ms[k])}</span>`;
+      box.appendChild(row);
+    });
+  }
+
+  // ---- comparison strip ----
+  function drawCompare() {
+    const svg = byId("compareChart");
+    svg.innerHTML = "";
+    const rows = DATA.players.map(p => ({ name: p.player, lo: p.totals.future_npg.p10, med: p.totals.future_npg.median, hi: p.totals.future_npg.p90, sel: p === state.player }))
+      .sort((a, b) => b.med - a.med);
+    const rowH = 30, W = 900, m = { t: 8, r: 24, b: 26, l: 150 };
+    const H = m.t + m.b + rows.length * rowH;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const iw = W - m.l - m.r;
+    const xMax = niceMax(Math.max(...rows.map(r => r.hi)) * 1.05);
+    const X = v => m.l + v / xMax * iw;
+    const faint = cssVar("--ink-faint"), hair = cssVar("--hair"), soft = cssVar("--ink-soft"), ink = cssVar("--ink"), goals = cssVar("--goals");
+    for (let i = 0; i <= 5; i++) {
+      const v = xMax * i / 5, x = X(v);
+      svg.appendChild(el("line", { x1: x, y1: m.t, x2: x, y2: m.t + rows.length * rowH, stroke: hair, "stroke-width": 1 }));
+      const t = el("text", { x, y: H - 8, "text-anchor": "middle", fill: faint }); t.setAttribute("font-family", "var(--mono)"); t.setAttribute("font-size", "11"); t.textContent = fmt(v); svg.appendChild(t);
+    }
+    rows.forEach((r, i) => {
+      const y = m.t + i * rowH + rowH / 2;
+      const nm = el("text", { x: m.l - 12, y: y + 4, "text-anchor": "end", fill: r.sel ? ink : soft });
+      nm.setAttribute("font-size", "13"); nm.setAttribute("font-weight", r.sel ? "700" : "400"); nm.textContent = r.name;
+      nm.style.cursor = "pointer";
+      nm.addEventListener("click", () => { state.player = DATA.players.find(p => p.player === r.name); syncPills(); render(); });
+      svg.appendChild(nm);
+      svg.appendChild(el("line", { x1: X(r.lo), y1: y, x2: X(r.hi), y2: y, stroke: r.sel ? goals : cssVar("--hair-strong"), "stroke-width": r.sel ? 5 : 4, "stroke-linecap": "round", opacity: r.sel ? 0.9 : 0.7 }));
+      svg.appendChild(el("circle", { cx: X(r.med), cy: y, r: r.sel ? 6 : 5, fill: r.sel ? goals : soft, stroke: cssVar("--panel"), "stroke-width": 2 }));
+      const vv = el("text", { x: X(r.hi) + 10, y: y + 4, fill: r.sel ? ink : faint }); vv.setAttribute("font-family", "var(--mono)"); vv.setAttribute("font-size", "11.5"); vv.setAttribute("font-variant-numeric","tabular-nums"); vv.textContent = fmt(r.med); svg.appendChild(vv);
+    });
+  }
+
+  // ---- master render ----
+  function render() {
+    const p = state.player;
+    byId("chartWho").textContent = `${p.player} · age ${p.age} · ${p.pos} · ${p.team}`;
+    byId("chartTitle").textContent = state.view === "career"
+      ? "Cumulative career goals (incl. penalties)"
+      : METRIC[state.metric].label + " per season";
+    syncArcSeg();
+    const card = byId("fan").closest(".chart-card");
+    card.classList.remove("fade-swap"); void card.offsetWidth; card.classList.add("fade-swap");
+    drawFan(); drawLegend(); drawReadout(); drawCompare();
+  }
+
+  byId("gCleanTag").textContent = "Clean test · 2025-26 · unseen";
+  byId("gSecondTag").textContent = "Second look · 2022-24";
+  render();
+})();
+</script>

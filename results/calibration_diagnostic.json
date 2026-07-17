@@ -1,0 +1,150 @@
+{
+  "base_season": 2021,
+  "n_sims": 1500,
+  "by_horizon": {
+    "h+1": {
+      "overall_coverage": 0.9149253731343283,
+      "share_with_zero_lower_bound": 0.981094527363184,
+      "by_predicted_level": {
+        "median 0 goals": {
+          "n": 1045,
+          "coverage": 0.9301435406698565,
+          "mean_interval_width": 1.5511004784689006,
+          "mean_actual": 0.5023923444976076
+        },
+        "median 1-2": {
+          "n": 663,
+          "coverage": 0.9125188536953243,
+          "mean_interval_width": 4.358521870286578,
+          "mean_actual": 1.7285067873303168
+        },
+        "median 3-5": {
+          "n": 222,
+          "coverage": 0.8648648648648649,
+          "mean_interval_width": 8.753153153153153,
+          "mean_actual": 4.621621621621622
+        },
+        "median 6+": {
+          "n": 76,
+          "coverage": 0.868421052631579,
+          "mean_interval_width": 13.97763157894737,
+          "mean_actual": 8.131578947368421
+        }
+      },
+      "by_position": {
+        "DF": {
+          "n": 672,
+          "coverage": 0.9419642857142857,
+          "mean_interval_width": 1.7863095238095246
+        },
+        "FW": {
+          "n": 340,
+          "coverage": 0.8970588235294118,
+          "mean_interval_width": 9.140588235294121
+        },
+        "GK": {
+          "n": 144,
+          "coverage": 1.0,
+          "mean_interval_width": 0.013888888888888888
+        },
+        "MF": {
+          "n": 854,
+          "coverage": 0.8864168618266979,
+          "mean_interval_width": 3.777400468384076
+        }
+      }
+    },
+    "h+2": {
+      "overall_coverage": 0.9124378109452737,
+      "share_with_zero_lower_bound": 1.0,
+      "by_predicted_level": {
+        "median 0 goals": {
+          "n": 1484,
+          "coverage": 0.9272237196765498,
+          "mean_interval_width": 2.07857142857143,
+          "mean_actual": 0.6698113207547169
+        },
+        "median 1-2": {
+          "n": 408,
+          "coverage": 0.8700980392156863,
+          "mean_interval_width": 5.628431372549021,
+          "mean_actual": 2.7083333333333335
+        },
+        "median 3-5": {
+          "n": 101,
+          "coverage": 0.8811881188118812,
+          "mean_interval_width": 10.110891089108913,
+          "mean_actual": 4.752475247524752
+        }
+      },
+      "by_position": {
+        "DF": {
+          "n": 672,
+          "coverage": 0.9255952380952381,
+          "mean_interval_width": 1.5816964285714303
+        },
+        "FW": {
+          "n": 340,
+          "coverage": 0.8705882352941177,
+          "mean_interval_width": 8.086470588235295
+        },
+        "GK": {
+          "n": 144,
+          "coverage": 1.0,
+          "mean_interval_width": 0.013888888888888888
+        },
+        "MF": {
+          "n": 854,
+          "coverage": 0.9039812646370023,
+          "mean_interval_width": 3.358196721311477
+        }
+      }
+    },
+    "h+3": {
+      "overall_coverage": 0.9044776119402985,
+      "share_with_zero_lower_bound": 1.0,
+      "by_predicted_level": {
+        "median 0 goals": {
+          "n": 1804,
+          "coverage": 0.9129711751662971,
+          "mean_interval_width": 2.2144124168514425,
+          "mean_actual": 0.8215077605321508
+        },
+        "median 1-2": {
+          "n": 176,
+          "coverage": 0.8238636363636364,
+          "mean_interval_width": 6.461363636363638,
+          "mean_actual": 3.6136363636363638
+        },
+        "median 3-5": {
+          "n": 25,
+          "coverage": 0.92,
+          "mean_interval_width": 11.64,
+          "mean_actual": 6.4
+        }
+      },
+      "by_position": {
+        "DF": {
+          "n": 672,
+          "coverage": 0.9330357142857143,
+          "mean_interval_width": 1.3250000000000008
+        },
+        "FW": {
+          "n": 340,
+          "coverage": 0.8470588235294118,
+          "mean_interval_width": 6.493529411764709
+        },
+        "GK": {
+          "n": 144,
+          "coverage": 1.0,
+          "mean_interval_width": 0.0
+        },
+        "MF": {
+          "n": 854,
+          "coverage": 0.8887587822014051,
+          "mean_interval_width": 2.8100702576112426
+        }
+      }
+    }
+  }
+}
