@@ -31,6 +31,10 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 
+# Each legend needs a young Big-5 start (to anchor the showcase's 18-21 year
+# olds) and a complete Big-5 career (so the scenario runs to a natural end).
+# Seasons from 2017-18 on are already in the project panel, so runs are only
+# fetched where they must be; the loader backfills the rest.
 LEGENDS = {
     "Cristiano Ronaldo": {
         "born": 1985,
@@ -45,6 +49,40 @@ LEGENDS = {
         "runs": [
             ("FRA-Ligue 1", range(2004, 2009)),
             ("ESP-La Liga", range(2009, 2023)),
+        ],
+    },
+    # Ligue 1 from age 16 (Monaco 2015-16), the closest modern parallel to
+    # Yamal's arc; joins Real Madrid (La Liga) in 2024.
+    "Kylian Mbappé": {
+        "born": 1998,
+        "runs": [
+            ("FRA-Ligue 1", range(2015, 2024)),
+            ("ESP-La Liga", range(2024, 2026)),
+        ],
+    },
+    # Big-5 from age 19 (Dortmund, Jan 2020) — the pre-Salzburg career is
+    # outside the Big 5 and correctly excluded. Man City from 2022.
+    "Erling Haaland": {
+        "born": 2000,
+        "runs": [
+            ("GER-Bundesliga", range(2019, 2022)),
+            ("ENG-Premier League", range(2022, 2026)),
+        ],
+    },
+    # Premier League from age 16 (Everton 2002-03), England's all-time PL
+    # scorer alongside Shearer's record.
+    "Wayne Rooney": {
+        "born": 1985,
+        "runs": [
+            ("ENG-Premier League", range(2002, 2018)),
+        ],
+    },
+    # La Liga from age 18 (Atlético 2006), then a decade at Man City.
+    "Sergio Agüero": {
+        "born": 1988,
+        "runs": [
+            ("ESP-La Liga", range(2006, 2011)),
+            ("ENG-Premier League", range(2011, 2021)),
         ],
     },
 }

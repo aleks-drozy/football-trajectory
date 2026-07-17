@@ -86,13 +86,17 @@ survived a clean replication, which is the strongest claim this project makes.
 
 `viz/trajectory_explorer.html` is a self-contained page (open it in any browser
 — data embedded, no server needed): pick any of 16 young attackers, see the
-projected fan of goals / assists / minutes from now to age 38, and — in the
-career view — graft a legend's real arc onto them with the **"what if he ages
-like…"** selector: Messi, Cristiano Ronaldo, or Benzema, each built from their
-actual season-by-season league record (all verified against FBref; Messi's sums
-to exactly his 474 record). The fan says what usually happens; the gold dashed
-line says what following one of the greatest careers ever would look like. The
-page carries the model's honest verdict on itself either way.
+projected fan of goals / assists / minutes from now to age 38, and, in the
+career view, graft a legend's real arc onto them with the **"Compare with"**
+selector: Messi, Cristiano Ronaldo, Mbappé, Haaland, Benzema, Agüero or Rooney,
+each built from their actual season-by-season league record (all verified
+against FBref; Messi's sums to exactly his 474 record, Rooney's to exactly his
+208). Two modes per pair — *at their rate* and *improving like them* — with the
+second suppressed wherever the growth factor cannot honestly be transplanted.
+Arcs belonging to still-active players (Mbappé, Haaland) are labelled as still
+being written. The fan says what usually happens; the gold dashed line says
+what following one of the greatest careers ever would look like. The page
+carries the model's honest verdict on itself either way.
 
 Rebuild after re-running the pipeline:
 

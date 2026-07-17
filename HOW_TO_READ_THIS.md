@@ -78,10 +78,11 @@ Quick look at Yamal specifically:
 
 `viz/trajectory_explorer.html` — open in any browser, no server needed. 16
 young attackers, fan charts for goals/assists/minutes, a cumulative career
-view, and a **"what if he ages like…"** selector that grafts Messi's, Cristiano
-Ronaldo's or Benzema's real career arc onto the selected youngster (career view
-only; scenarios, not forecasts, and labelled as such). Built by
-`scripts/build_viz.py` from `viz/template.html` + the two results JSONs —
+view, and a **"Compare with"** selector that grafts a legend's real career arc
+onto the selected youngster: Messi, Cristiano Ronaldo, Mbappé, Haaland,
+Benzema, Agüero or Rooney (career view only; scenarios, not forecasts, and
+labelled as such — active players' arcs are marked as still being written).
+Built by `scripts/build_viz.py` from `viz/template.html` + the results JSONs —
 edit the template, never the built file.
 
 ## Re-running anything

@@ -108,10 +108,18 @@ def load_legends(panel: pd.DataFrame) -> dict[str, dict]:
         "Lionel Messi": {
             "arc": {age: (mins, gls) for _, age, mins, gls in MESSI_TABLE},
             "source": "statmuse + FBref cross-check (sums to the 474 record)",
+            "born": 1987,
         }
     }
     csv = pd.read_csv(ROOT / "data" / "legend_seasons.csv")
-    borns = {"Cristiano Ronaldo": 1985, "Karim Benzema": 1987}
+    borns = {
+        "Cristiano Ronaldo": 1985,
+        "Karim Benzema": 1987,
+        "Kylian Mbappé": 1998,
+        "Erling Haaland": 2000,
+        "Wayne Rooney": 1985,
+        "Sergio Agüero": 1988,
+    }
     for name, grp in csv.groupby("player"):
         # A legend's age-17 cameo (a handful of minutes) would make a wild
         # multiplier denominator; require a real season to anchor on.
@@ -133,8 +141,18 @@ def load_legends(panel: pd.DataFrame) -> dict[str, dict]:
             "arc": arc,
             "source": "FBref via scripts/fetch_legends.py"
             + (" + panel backfill for 2017+ seasons" if filled else ""),
+            "born": borns[name],
         }
-    return legends
+
+    # Presentation order: the two all-timers, then the two active heirs, then
+    # the rest. Insertion order survives the JSON round-trip into the UI.
+    preferred = [
+        "Lionel Messi", "Cristiano Ronaldo", "Kylian Mbappé", "Erling Haaland",
+        "Karim Benzema", "Sergio Agüero", "Wayne Rooney",
+    ]
+    return {n: legends[n] for n in preferred if n in legends} | {
+        n: d for n, d in legends.items() if n not in preferred
+    }
 
 
 def _finish(youngster: dict, path: list[dict], extra: dict) -> dict:
@@ -276,6 +294,10 @@ def main() -> int:
                 "ages": [min(d["arc"]), max(d["arc"])],
                 "league_goals": sum(g for _, g in d["arc"].values()),
                 "source": d["source"],
+                # An arc whose last season is the current one belongs to a
+                # player still writing his career; the UI must not present it
+                # as a finished life's work.
+                "arc_complete": d["born"] + max(d["arc"]) < BASE_SEASON,
             }
             for name, d in legends.items()
         },
