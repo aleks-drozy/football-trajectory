@@ -1,5 +1,11 @@
 # Football Trajectory — can you project a teenager's career?
 
+[![tests](https://github.com/aleks-drozy/football-trajectory/actions/workflows/tests.yml/badge.svg)](https://github.com/aleks-drozy/football-trajectory/actions/workflows/tests.yml)
+
+**▶ Live explorer: [aleks-drozy.github.io/football-trajectory](https://aleks-drozy.github.io/football-trajectory/)** — 16 young players, projection fans, and seven legend arcs to compare against.
+
+**⏳ [Predictions ledger](PREDICTIONS.md)** — the model's 2026-27 calls, frozen 2026-07-17, scored publicly when the season ends.
+
 If Lamine Yamal keeps performing the way he has, how many goals will he finish
 with? The tempting answer is to resample his own three seasons ten thousand
 times and publish the fan chart. It would look authoritative and mean almost
@@ -35,6 +41,10 @@ narrow. This one is too wide.
 
 So the Yamal chart ships labelled **NOT TRUSTWORTHY**, as the pre-registration
 requires. A well-drawn interval that isn't calibrated is a lie with error bars.
+
+| The failure, visibly | The skill, visibly |
+|---|---|
+| ![Calibration: every bar above the pass band](charts/calibration.png) | ![Skill: every CI left of zero](charts/skill.png) |
 
 **The other headline number: K = 110** — fitted, not chosen. The shrinkage
 constant is in units of 90s, so 110 ≈ 9,900 minutes ≈ **3.5 full seasons** of

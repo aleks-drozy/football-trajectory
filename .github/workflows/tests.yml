@@ -1,0 +1,20 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # The suite is offline and synthetic-fixture-based; it needs only the
+      # core stack, pinned to match requirements.txt. The scrape stack
+      # (soccerdata + headless Chrome) is deliberately NOT installed here.
+      - run: pip install numpy==2.4.6 pandas==3.0.3 pyarrow==25.0.0 pytest==9.1.1
+      - run: python -m pytest

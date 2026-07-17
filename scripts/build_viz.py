@@ -40,6 +40,13 @@ def main() -> int:
     out = ROOT / "viz" / "trajectory_explorer.html"
     out.write_text(html, encoding="utf-8")
     print(f"-> {out} ({len(html):,} bytes)")
+
+    # GitHub Pages serves the same page from docs/ — kept in sync by this
+    # build, never edited directly (same rule as the built viz file).
+    pages = ROOT / "docs" / "index.html"
+    pages.parent.mkdir(exist_ok=True)
+    pages.write_text(html, encoding="utf-8")
+    print(f"-> {pages} (GitHub Pages copy)")
     return 0
 
 

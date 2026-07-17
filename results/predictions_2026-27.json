@@ -1,0 +1,288 @@
+{
+  "frozen_on": "2026-07-17",
+  "season": "2026-27",
+  "model_version": "v2 (availability conditioned on talent)",
+  "n_sims": 6000,
+  "scope": "Big-5 domestic league only; a player outside the Big 5 scores 0 by definition",
+  "scoring_protocol": {
+    "when": "after the 2026-27 Big-5 season ends (fetch the season, rebuild the panel, run scripts/score_predictions.py)",
+    "point_score": "MAE of median npG across all players, compared against the persistence baseline (player repeats his 2025-26 npG)",
+    "interval_score": "share of actual npG inside [p10, p90]; nominal 80%",
+    "headline_claim": "Yamal scores FEWER non-penalty league goals in 2026-27 than his 13 of 2025-26",
+    "no_exclusions": "every player below is scored; transfers out of the Big 5 count as 0, injuries count as what happened"
+  },
+  "predictions": [
+    {
+      "player": "Lamine Yamal",
+      "born": 2007,
+      "age_in_2026_27": 19,
+      "club_when_frozen": "Barcelona",
+      "npg": {
+        "median": 5.0,
+        "p10": 1.0,
+        "p90": 11.0
+      },
+      "assists": {
+        "median": 5.0,
+        "p10": 1.0,
+        "p90": 11.0
+      },
+      "minutes_median": 1696.0
+    },
+    {
+      "player": "Yan Diomand\u00e9",
+      "born": 2006,
+      "age_in_2026_27": 20,
+      "club_when_frozen": "RB Leipzig",
+      "npg": {
+        "median": 7.0,
+        "p10": 1.0,
+        "p90": 13.0
+      },
+      "assists": {
+        "median": 4.0,
+        "p10": 0.0,
+        "p90": 9.0
+      },
+      "minutes_median": 1900.0
+    },
+    {
+      "player": "Nicol\u00e1s Paz",
+      "born": 2004,
+      "age_in_2026_27": 22,
+      "club_when_frozen": "Como",
+      "npg": {
+        "median": 6.0,
+        "p10": 1.0,
+        "p90": 10.0
+      },
+      "assists": {
+        "median": 4.0,
+        "p10": 1.0,
+        "p90": 8.0
+      },
+      "minutes_median": 2282.0
+    },
+    {
+      "player": "Said El Mala",
+      "born": 2006,
+      "age_in_2026_27": 20,
+      "club_when_frozen": "K\u00f6ln",
+      "npg": {
+        "median": 7.0,
+        "p10": 1.0,
+        "p90": 14.0
+      },
+      "assists": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 6.0
+      },
+      "minutes_median": 1779.0
+    },
+    {
+      "player": "Kenan Y\u0131ld\u0131z",
+      "born": 2005,
+      "age_in_2026_27": 21,
+      "club_when_frozen": "Juventus",
+      "npg": {
+        "median": 5.0,
+        "p10": 1.0,
+        "p90": 10.0
+      },
+      "assists": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 7.0
+      },
+      "minutes_median": 2263.0
+    },
+    {
+      "player": "Bazoumana Tour\u00e9",
+      "born": 2006,
+      "age_in_2026_27": 20,
+      "club_when_frozen": "Hoffenheim",
+      "npg": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 6.0
+      },
+      "assists": {
+        "median": 5.0,
+        "p10": 1.0,
+        "p90": 10.0
+      },
+      "minutes_median": 1902.0
+    },
+    {
+      "player": "Arda G\u00fcler",
+      "born": 2005,
+      "age_in_2026_27": 21,
+      "club_when_frozen": "Real Madrid",
+      "npg": {
+        "median": 4.0,
+        "p10": 0.0,
+        "p90": 9.0
+      },
+      "assists": {
+        "median": 5.0,
+        "p10": 1.0,
+        "p90": 10.0
+      },
+      "minutes_median": 1902.0
+    },
+    {
+      "player": "\u00c1lvaro Rodr\u00edguez",
+      "born": 2004,
+      "age_in_2026_27": 22,
+      "club_when_frozen": "Elche",
+      "npg": {
+        "median": 5.0,
+        "p10": 0.0,
+        "p90": 11.0
+      },
+      "assists": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 6.0
+      },
+      "minutes_median": 1944.0
+    },
+    {
+      "player": "Afonso Moreira",
+      "born": 2005,
+      "age_in_2026_27": 21,
+      "club_when_frozen": "Lyon",
+      "npg": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 6.0
+      },
+      "assists": {
+        "median": 4.0,
+        "p10": 0.0,
+        "p90": 9.0
+      },
+      "minutes_median": 1781.0
+    },
+    {
+      "player": "Carlos Esp\u00ed",
+      "born": 2005,
+      "age_in_2026_27": 21,
+      "club_when_frozen": "Levante",
+      "npg": {
+        "median": 6.0,
+        "p10": 0.0,
+        "p90": 14.0
+      },
+      "assists": {
+        "median": 1.0,
+        "p10": 0.0,
+        "p90": 3.0
+      },
+      "minutes_median": 1270.0
+    },
+    {
+      "player": "D\u00e9sir\u00e9 Dou\u00e9",
+      "born": 2005,
+      "age_in_2026_27": 21,
+      "club_when_frozen": "PSG",
+      "npg": {
+        "median": 4.0,
+        "p10": 0.0,
+        "p90": 10.0
+      },
+      "assists": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 7.0
+      },
+      "minutes_median": 1295.0
+    },
+    {
+      "player": "Eli Junior Kroupi",
+      "born": 2006,
+      "age_in_2026_27": 20,
+      "club_when_frozen": "Bournemouth",
+      "npg": {
+        "median": 6.0,
+        "p10": 1.0,
+        "p90": 12.0
+      },
+      "assists": {
+        "median": 2.0,
+        "p10": 0.0,
+        "p90": 4.0
+      },
+      "minutes_median": 1779.0
+    },
+    {
+      "player": "Endrick",
+      "born": 2006,
+      "age_in_2026_27": 20,
+      "club_when_frozen": "Lyon",
+      "npg": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 9.0
+      },
+      "assists": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 8.0
+      },
+      "minutes_median": 1289.0
+    },
+    {
+      "player": "Jesus Rodr\u00edguez",
+      "born": 2005,
+      "age_in_2026_27": 21,
+      "club_when_frozen": "Como",
+      "npg": {
+        "median": 2.0,
+        "p10": 0.0,
+        "p90": 5.0
+      },
+      "assists": {
+        "median": 4.0,
+        "p10": 0.0,
+        "p90": 9.0
+      },
+      "minutes_median": 1779.0
+    },
+    {
+      "player": "Matias Fernandez-Pardo",
+      "born": 2005,
+      "age_in_2026_27": 21,
+      "club_when_frozen": "Lille",
+      "npg": {
+        "median": 5.0,
+        "p10": 0.0,
+        "p90": 10.0
+      },
+      "assists": {
+        "median": 3.0,
+        "p10": 0.0,
+        "p90": 7.0
+      },
+      "minutes_median": 1803.0
+    },
+    {
+      "player": "Diego Moreira",
+      "born": 2004,
+      "age_in_2026_27": 22,
+      "club_when_frozen": "Strasbourg",
+      "npg": {
+        "median": 2.0,
+        "p10": 0.0,
+        "p90": 5.0
+      },
+      "assists": {
+        "median": 4.0,
+        "p10": 0.0,
+        "p90": 8.0
+      },
+      "minutes_median": 1928.0
+    }
+  ]
+}
