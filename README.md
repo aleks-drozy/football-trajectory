@@ -15,7 +15,8 @@ no aging, and no way of ever being wrong.
 So this asks the question behind it: **can cohort-based aging curves plus Monte
 Carlo produce _calibrated_ projections that beat naive baselines out-of-sample?**
 Built on **24,057 FBref Big-5 player-seasons** (2017-18 .. 2025-26), against a
-gate committed to git (`c0a6260`) **before any modelling code existed**.
+gate committed to git (`c0a6260`, **2026-07-16**) **before any modelling code
+existed**.
 
 ## Verdict: NOT PROVEN at all six gates — and it fails the interesting way
 
@@ -57,6 +58,22 @@ New here? **[HOW_TO_READ_THIS.md](HOW_TO_READ_THIS.md)** is a guided path throug
 the repo.
 
 This is a research project, not a scouting tool.
+
+## Methodology at a glance
+
+- **Pre-registered.** Gates, thresholds, baselines and test seasons were
+  committed on **2026-07-16** (`c0a6260`) before any modelling code existed;
+  every later change is logged in [DESIGN.md](DESIGN.md)'s amendment section.
+- **Three-part gate, six horizons.** Calibration (nominal 80% interval must
+  cover 72-88%), skill (beat the best naive baseline with a bootstrap CI
+  excluding zero) and concentration (survive every leave-one-league/position-out
+  check) — judged at goals/assists × +1/+2/+3 seasons.
+- **Unseen-season replication.** v2 was evaluated with `run_validate.py --fresh`
+  on 2025-26, a season never touched during development — same result as the
+  original split: real skill, too-wide intervals (see below).
+- **Verdict: NOT PROVEN at all six gates** — the model beats every baseline
+  everywhere, but its intervals are under-confident, so projections ship
+  labelled exactly as trustworthy as the validation earned.
 
 ## v2 — availability now conditions on talent
 
